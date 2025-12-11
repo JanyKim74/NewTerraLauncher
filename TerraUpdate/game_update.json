@@ -1,0 +1,11 @@
+{
+  "CurrentLauncherIndex": "0.0.1",
+  "CurrentUpdateIndex": "0.0.1",
+  "LauncherIndex": "0.0.2",
+  "LauncherUrl": "https://your-server.com/downloads/launcher_v0.0.2.zip",
+  "LauncherHash": "abc123...",
+  "UpdateIndex": "0.0.5",
+  "UpdateFileUrl": "https://your-server.com/downloads/game_v0.0.5.zip",
+  "UpdateFileHash": "def456...",
+  "ReleaseNotes": "런처 및 게임 업데이트\n- 런처 안정성 개선\n- 게임 버그 수정"
+}

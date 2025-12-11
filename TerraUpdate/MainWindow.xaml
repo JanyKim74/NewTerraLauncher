@@ -1,0 +1,627 @@
+﻿<Window x:Class="Updater.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Terra ParkGolf Launcher" 
+        Height="1080" Width="1920"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
+        Background="Transparent">
+
+    <Grid>
+        <!-- 배경 -->
+        <Grid.Background>
+            <ImageBrush ImageSource="/Image/BG_main.png" 
+                        Stretch="UniformToFill"/>
+        </Grid.Background>
+
+        <!-- 메인 레이아웃 -->
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="574"/>
+                <!-- Advertise 영역 -->
+                <RowDefinition/>
+                <!-- 버튼 영역 -->
+                <RowDefinition Height="100"/>
+                <!-- 하단 상태바 -->
+            </Grid.RowDefinitions>
+
+            <!-- ==================== -->
+            <!-- 1. Advertise 영역 (상단) -->
+            <!-- ==================== -->
+            <Border Grid.Row="0" 
+                    x:Name="mask_advertise"
+                    Margin="100,50,100,0"
+                    CornerRadius="20">
+                <Border.Background>
+                    <ImageBrush ImageSource="/Image/banner_1700x520.png" 
+                                Stretch="UniformToFill"/>
+                </Border.Background>
+
+                <Grid>
+                    <!-- 닫기 버튼 (우측 상단) -->
+                    <Button x:Name="btn_main_x"
+                            Content="✕"
+                            Width="60"
+                            Height="60"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Margin="0,-43,-94,0"
+                            Background="Transparent"
+                            Foreground="White"
+                            FontSize="32"
+                            FontWeight="Bold"
+                            BorderThickness="0"
+                            Cursor="Hand"
+                            Click="CloseButton_Click" RenderTransformOrigin="2.4,-0.133">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    CornerRadius="10">
+                                                <ContentPresenter HorizontalAlignment="Center" 
+                                                                VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                                <Style.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#44FFFFFF"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+
+                    <!-- 릴리즈 노트 영역 (업데이트 시 표시) -->
+                    <Border x:Name="ReleaseNotesBorder"
+                            Background="#CC000000"
+                            CornerRadius="15"
+                            Padding="30"
+                            Margin="40"
+                            Visibility="Collapsed">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <TextBlock Text="업데이트 공지" 
+                                           Foreground="#FF4CAF50" 
+                                           FontWeight="Bold" 
+                                           FontSize="24"
+                                           Margin="0,0,0,15"/>
+                                <TextBlock x:Name="ReleaseNotesText" 
+                                           Text="" 
+                                           Foreground="White" 
+                                           FontSize="18"
+                                           TextWrapping="Wrap"
+                                           LineHeight="28"/>
+                            </StackPanel>
+                        </ScrollViewer>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- ==================== -->
+            <!-- 2. 버튼 영역 (중앙) -->
+            <!-- ==================== -->
+            <!-- ==================== -->
+            <!-- 2. 버튼 영역 (중앙) -->
+            <!-- ==================== -->
+            <Grid Grid.Row="1" Margin="100,50,100,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.5*"/>
+                    <!-- 게임 실행 (좌측, 큰 아이콘) -->
+                    <ColumnDefinition Width="2*"/>
+                    <!-- 우측 3x2 그리드 -->
+                </Grid.ColumnDefinitions>
+
+                <!-- 게임 실행 버튼 (좌측, 전체 높이) -->
+                <Border Grid.Column="0" 
+                        x:Name="Border_GameStart"
+                        CornerRadius="20" 
+                        Margin="10"
+                        MouseEnter="Button_MouseEnter"
+                        MouseLeave="Button_MouseLeave">
+                    <Border.Background>
+                        <ImageBrush ImageSource="/Image/btn_game_start.png" 
+                                    Stretch="UniformToFill"/>
+                    </Border.Background>
+
+                    <Button x:Name="btn_game_start"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="StartGameButton_Click"
+                            Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,0,0,0" Height="326" Width="697">
+                        <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Height="258" Width="616">
+                            <TextBlock Text="게임 실행" 
+                                       FontSize="52" 
+                                       FontWeight="Bold"
+                                       Foreground="#ffffff"
+                                       HorizontalAlignment="Left"
+                                       Margin="0,0,0,10" VerticalAlignment="Top">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect BlurRadius="8" ShadowDepth="3" Color="Black" Opacity="0.8"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+                            <TextBlock Text="Game Start" 
+                                       FontSize="20"
+                                       Foreground="#9e9e9e"
+                                       HorizontalAlignment="Left">
+                                <TextBlock.Effect>
+                                    <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                                </TextBlock.Effect>
+                            </TextBlock>
+                        </StackPanel>
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    BorderThickness="0"
+                                                    CornerRadius="20">
+                                                <ContentPresenter HorizontalAlignment="Center" 
+                                                                VerticalAlignment="Center"/>
+                                            </Border>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </Border>
+
+                <!-- 우측 2x3 그리드 -->
+                <Grid Grid.Column="1">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Row 0, Column 0: 원격 지원 -->
+                    <Border Grid.Row="0" Grid.Column="0" 
+                            x:Name="Border_RemoteSupport"
+                            CornerRadius="20" 
+                            Margin="10"
+                            MouseEnter="Button_MouseEnter"
+                            MouseLeave="Button_MouseLeave">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_remote_support.png" 
+                                        Stretch="UniformToFill"/>
+                        </Border.Background>
+
+                        <Button x:Name="btn_remote_support"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="LaunchTeamViewer_Click"
+                                Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Height="148" Width="298">
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Height="121" Width="208">
+                                <TextBlock Text="원격 지원" 
+                                           FontSize="35" 
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Left"
+                                           Margin="0,0,0,10">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                                <TextBlock Text="Remote Support" 
+                                           FontSize="18"
+                                           Foreground="#AAAAAA"
+                                           HorizontalAlignment="Left">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                            </StackPanel>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="20">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                    VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
+
+                    <!-- Row 0, Column 1: 시스템 점검 -->
+                    <Border Grid.Row="0" Grid.Column="1" 
+                            x:Name="Border_SystemCheck"
+                            CornerRadius="20" 
+                            Margin="10"
+                            MouseEnter="Button_MouseEnter"
+                            MouseLeave="Button_MouseLeave">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_system_check.png" 
+                                        Stretch="UniformToFill"/>
+                        </Border.Background>
+
+                        <Button x:Name="btn_system_check"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="SystemCheck_Click"
+                                Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Height="148" Width="281">
+                            <Grid>
+                                <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Height="101" Width="207">
+                                    <TextBlock Text="시스템 점검" 
+                                               FontSize="35" 
+                                               FontWeight="Bold"
+                                               Foreground="#ffffff"
+                                               HorizontalAlignment="Left"
+                                               Margin="0,0,0,10">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect BlurRadius="8" ShadowDepth="3" Color="Black" Opacity="0.8"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                    <TextBlock Text="System check" 
+                                               FontSize="18"
+                                               Foreground="#9e9e9e"
+                                               HorizontalAlignment="Left">
+                                        <TextBlock.Effect>
+                                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                                        </TextBlock.Effect>
+                                    </TextBlock>
+                                </StackPanel>
+
+                                <!-- 상태 인디케이터 (우측 상단) -->
+                                <Ellipse x:Name="icon_circle_state_green"
+                                         Width="25" Height="25"
+                                         Fill="#FF4CAF50"
+                                         HorizontalAlignment="Right"
+                                         VerticalAlignment="Top"
+                                         Margin="0,361,-16,-285" RenderTransformOrigin="3.8,9.8"/>
+                            </Grid>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="20">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                    VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
+
+                    <!-- Row 1, Column 0: 업데이트 -->
+                    <Border Grid.Row="1" Grid.Column="0" 
+                            x:Name="Border_Update"
+                            CornerRadius="20" 
+                            Margin="10"
+                            MouseEnter="Button_MouseEnter"
+                            MouseLeave="Button_MouseLeave">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_update.png" 
+                                        Stretch="UniformToFill"/>
+                        </Border.Background>
+
+                        <Button x:Name="btn_update"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="UpdateButton_Click"
+                                Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Height="148" Width="298">
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Height="127" Width="230">
+                                <TextBlock Text="업데이트" 
+                                           FontSize="35" 
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Left"
+                                           Margin="0,0,0,10">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                                <TextBlock Text="Update" 
+                                           FontSize="18"
+                                           Foreground="#AAAAAA"
+                                           HorizontalAlignment="Left">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                            </StackPanel>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="20">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                    VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
+
+                    <!-- Row 0, Column 2: 시스템 종료 -->
+                    <Border Grid.Row="0" Grid.Column="2" 
+                            x:Name="Border_SystemClose"
+                            CornerRadius="20" 
+                            Margin="10"
+                            MouseEnter="Button_MouseEnter"
+                            MouseLeave="Button_MouseLeave">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_system_close.png" 
+                                        Stretch="UniformToFill"/>
+                        </Border.Background>
+
+                        <Button x:Name="btn_system_close"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="ShutdownWindows_Click"
+                                Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Height="148" Width="297">
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Height="133" Width="245">
+                                <TextBlock Text="시스템 종료" 
+                                           FontSize="35" 
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Left"
+                                           Margin="0,0,0,10">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                                <TextBlock Text="System Close" 
+                                           FontSize="18"
+                                           Foreground="#AAAAAA"
+                                           HorizontalAlignment="Left">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                            </StackPanel>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="20">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                    VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
+
+                    <!-- Row 1, Column 1: 관리자 설정 -->
+                    <Border Grid.Row="1" Grid.Column="1"
+                            x:Name="Border_AdminSetting"
+                            CornerRadius="20" 
+                            Margin="10"
+                            MouseEnter="Button_MouseEnter"
+                            MouseLeave="Button_MouseLeave">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_admin_setting.png" 
+                                        Stretch="UniformToFill"/>
+                        </Border.Background>
+
+                        <Button x:Name="btn_admin_setting"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="OptionsButton_Click"
+                                Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Height="148" Width="298">
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Width="259" Height="121">
+                                <TextBlock Text="관리자 설정" 
+                                           FontSize="35" 
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Left"
+                                           Margin="0,0,0,10">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                                <TextBlock Text="Admin Setting" 
+                                           FontSize="18"
+                                           Foreground="#AAAAAA"
+                                           HorizontalAlignment="Left">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                            </StackPanel>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="20">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                    VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
+
+                    <!-- Row 1, Column 2: 시스템 다시 시작 -->
+                    <Border Grid.Row="1" Grid.Column="2" 
+                            x:Name="Border_SystemRestart"
+                            CornerRadius="20" 
+                            Margin="10"
+                            MouseEnter="Button_MouseEnter"
+                            MouseLeave="Button_MouseLeave">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_system_restart.png" 
+                                        Stretch="UniformToFill"/>
+                        </Border.Background>
+
+                        <Button x:Name="btn_system_restart"
+                                Background="Transparent"
+                                BorderThickness="0"
+                                Click="RestartWindows_Click"
+                                Cursor="Hand" HorizontalAlignment="Left" VerticalAlignment="Top" Height="148" Width="297">
+                            <StackPanel VerticalAlignment="Top" HorizontalAlignment="Left" Height="125" Width="270">
+                                <TextBlock Text="시스템 다시 시작" 
+                                           FontSize="35" 
+                                           FontWeight="Bold"
+                                           Foreground="White"
+                                           HorizontalAlignment="Left"
+                                           Margin="0,0,0,10">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="8" ShadowDepth="3" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                                <TextBlock Text="System Restart" 
+                                           FontSize="18"
+                                           Foreground="#AAAAAA"
+                                           HorizontalAlignment="Left">
+                                    <TextBlock.Effect>
+                                        <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                                    </TextBlock.Effect>
+                                </TextBlock>
+                            </StackPanel>
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}"
+                                                        BorderThickness="0"
+                                                        CornerRadius="20">
+                                                    <ContentPresenter HorizontalAlignment="Center" 
+                                                                    VerticalAlignment="Center"/>
+                                                </Border>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                    </Border>
+                </Grid>
+            </Grid>
+            <!-- ==================== -->
+            <!-- 3. 하단 상태 바 -->
+            <!-- ==================== -->
+            <Grid Grid.Row="2" Background="#DD000000" Margin="0,0,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- 좌측: 상태 텍스트 -->
+                <StackPanel Grid.Column="0" 
+                            Orientation="Horizontal" 
+                            VerticalAlignment="Center"
+                            Margin="50,0,0,0">
+                    <TextBlock x:Name="fr_launcher_state"
+                               Text="정상 동작하였습니다." 
+                               FontSize="28"
+                               Foreground="#d3d3d3"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- 중앙: 진행바 (업데이트 시 표시) -->
+                <StackPanel Grid.Column="1" 
+                            VerticalAlignment="Center"
+                            Margin="50,0,50,0"
+                            Visibility="Collapsed"
+                            x:Name="ProgressPanel">
+                    <TextBlock x:Name="ProgressText" 
+                               Text="상태 확인 중..." 
+                               Foreground="White" 
+                               FontSize="18"
+                               HorizontalAlignment="Center" 
+                               Margin="0,0,0,10"/>
+                    <ProgressBar x:Name="ProgressBar" 
+                                 Height="15" 
+                                 Background="#FF2D2D44" 
+                                 Foreground="#FF4CAF50"
+                                 Value="0"
+                                 Minimum="0"
+                                 Maximum="100"/>
+                </StackPanel>
+
+                <!-- 우측: 통신상태 아이콘 + 버전 정보 -->
+                <StackPanel Grid.Column="2" 
+                            Orientation="Horizontal" 
+                            VerticalAlignment="Center"
+                            Margin="0,0,50,0">
+                    <!-- 통신 상태 -->
+                    <TextBlock Text="통신상태" 
+                               FontSize="22"
+                               Foreground="White"
+                               VerticalAlignment="Center"
+                               Margin="0,0,15,0"/>
+
+                    <Ellipse Width="20" Height="20"
+                             Fill="#FF4CAF50"
+                             VerticalAlignment="Center"
+                             Margin="0,0,30,0"/>
+
+                    <!-- 런처 버전 -->
+                    <TextBlock x:Name="LauncherVersionText"
+                               Text="Launcher v0.0.1" 
+                               FontSize="18"
+                               Foreground="#AAAAAA"
+                               VerticalAlignment="Center"
+                               Margin="0,0,20,0"/>
+
+                    <!-- 게임 버전 -->
+                    <TextBlock x:Name="GameVersionText"
+                               Text="Game v0.0.1" 
+                               FontSize="18"
+                               Foreground="#AAAAAA"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- 숨겨진 UI 요소들 (기존 코드 호환성) -->
+            <Grid Visibility="Collapsed">
+                <Ellipse x:Name="UpdateStatusIndicator"/>
+                <TextBlock x:Name="UpdateStatusText"/>
+                <Ellipse x:Name="SerialStatusIndicator"/>
+                <TextBlock x:Name="SerialStatusText"/>
+                <Ellipse x:Name="SensorStatusIndicator"/>
+                <TextBlock x:Name="SensorStatusText"/>
+                <Button x:Name="UpdateButton"/>
+                <Button x:Name="StartGameButton"/>
+                <Button x:Name="RefreshButton"/>
+                <Button x:Name="OptionsButton"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

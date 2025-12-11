@@ -1,0 +1,8 @@
+{
+  "ServerUrl": "https://your-ncp-server.com",
+  "GameUpdateJsonUrl": "/api/game_update.json",
+  "SerialPortTimeout": 3000,
+  "SerialBaudRate": 9600,
+  "GameExecutablePath": "Game/Game.exe",
+  "SystemConfigPath": "Game/Saved/SystemConfig.json"
+}

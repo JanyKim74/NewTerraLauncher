@@ -1,0 +1,24 @@
+[
+  {
+    "LauncherIndex": "0.0.6",
+    "LauncherUrl": "11",
+    "LauncherHash": "22",
+    "UpdateIndex": "0.0.6",
+    "UpdateFileUrl": "3344",
+    "UpdateFileHash": "55",
+    "ReleaseNotes": "wer",
+    "ReleaseDate": null,
+    "Shipping": "BETA"
+  },
+  {
+    "LauncherIndex": "0.0.5",
+    "LauncherUrl": "https://terrapark-game-builds.kr.ncloudstorage.com/terrapark_20251125154033.zip?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ncp_iam_BPASKR2UXvgItRpwGmGE%2F20251126%2Fkr%2Fs3%2Faws4_request&X-Amz-Date=20251126T061504Z&X-Amz-Expires=3600&X-Amz-Signature=447de67ed4a2eb80110573eb212bd4834d8d11a4db1942d2fd44829b32f8223b&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+    "LauncherHash": "d7d1571fe9b53789031207556fe770e20454114970ebc681657417fcfa752c05",
+    "UpdateIndex": "0.0.5",
+    "UpdateFileUrl": "https://terrapark-game-builds.kr.ncloudstorage.com/terrapark_20251125111813.zip?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=ncp_iam_BPASKR2UXvgItRpwGmGE%2F20251126%2Fkr%2Fs3%2Faws4_request&X-Amz-Date=20251126T061504Z&X-Amz-Expires=3600&X-Amz-Signature=c9b7c7042857f8c6a50329e93431996fdcf0b90492e9d6df16913bacbdc33a1d&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject",
+    "UpdateFileHash": "dac8e13751e11cb2763c601d46e04f4fde87a2f59a286e19de8a8e314ba06873",
+    "ReleaseNotes": "테라파크골프 런처 업데이트\n런처업데이트 0.0.5\n게임업데이트 0.0.5",
+    "ReleaseDate": "2025-11-26T03:06:02.498Z",
+    "Shipping": "TERRA"
+  }
+]

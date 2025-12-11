@@ -1,0 +1,260 @@
+<Window x:Class="Updater.UpdatePopupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="업데이트" 
+        Height="600" Width="1100"
+        WindowStyle="None"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen"
+        AllowsTransparency="True"
+        Background="Transparent">
+
+    <Grid>
+        <!-- 팝업 배경 프레임 (fr_update_02) -->
+        <Border x:Name="PopupFrame"
+                CornerRadius="20"
+                BorderBrush="#00CED1"
+                BorderThickness="3">
+            <Border.Background>
+                <ImageBrush ImageSource="/Image/fr_update_02.png" 
+                            Stretch="Fill"/>
+            </Border.Background>
+            <Border.Effect>
+                <DropShadowEffect BlurRadius="30" ShadowDepth="0" Color="#00CED1" Opacity="0.6"/>
+            </Border.Effect>
+
+            <Grid Margin="50">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- 제목 -->
+                    <RowDefinition Height="*"/>
+                    <!-- 메시지 영역 -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- 진행바 -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- 버튼 영역 -->
+                </Grid.RowDefinitions>
+
+                <!-- 제목 영역: 최신 버전(Ver 1.2.0) 업데이트 중입니다 -->
+                <StackPanel Grid.Row="0"
+                            HorizontalAlignment="Center"
+                            Orientation="Horizontal"
+                            Margin="0,20,0,30">
+                    <TextBlock x:Name="TitlePrefix" 
+                               Text="최신 버전(" 
+                               FontSize="32" 
+                               Foreground="#84ff29" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                    <TextBlock x:Name="VersionText" 
+                               Text="Ver 1.2.0" 
+                               FontSize="32" 
+                               Foreground="#84ff29" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                    <TextBlock x:Name="TitleSuffix" 
+                               Text=") 업데이트 중입니다." 
+                               FontSize="32" 
+                               Foreground="#e0eaec" 
+                               FontWeight="Bold"
+                               VerticalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- 메시지 영역 -->
+                <StackPanel Grid.Row="1" 
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center">
+                    <!-- 질문 텍스트 -->
+                    <TextBlock x:Name="MessageText"
+                               Text="업데이트를 하시겠습니까?"
+                               FontSize="28"
+                               Foreground="#e0eaec"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Margin="0,0,0,20"
+                               FontWeight="Bold">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+
+                    <!-- 추가 메시지 -->
+                    <TextBlock x:Name="SubMessageText"
+                               Text="시간이 다소 소요됩니다."
+                               FontSize="22"
+                               Foreground="#AAAAAA"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               Visibility="Visible">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- 진행바 영역 (gauge_loading_00, gauge_loading_01) -->
+                <StackPanel Grid.Row="2" 
+                            Margin="0,30,0,40"
+                            Visibility="Collapsed"
+                            x:Name="ProgressPanel">
+                    <!-- 진행 상태 텍스트 -->
+                    <TextBlock x:Name="ProgressStatusText"
+                               Text="다운로드 중..."
+                               FontSize="24"
+                               Foreground="#e0eaec"
+                               HorizontalAlignment="Center"
+                               FontWeight="Bold"
+                               Margin="0,0,0,20">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+
+                    <!-- 진행바 (이미지 기반) -->
+                    <Border Height="40"
+                             CornerRadius="20"
+                            Padding="0"
+                            Margin="0,0,0,10">
+                        <!-- 진행바 배경 (gauge_loading_00) -->
+                        <Border x:Name="ProgressBarBackground"
+                                CornerRadius="20"
+                                ClipToBounds="True">
+                            <Border.Background>
+                                <ImageBrush ImageSource="/Image/gauge_loading_00.png" 
+                                            Stretch="Fill"/>
+                            </Border.Background>
+
+                            <!-- 진행바 채우기 (gauge_loading_01) -->
+                            <Border x:Name="ProgressBarFill"
+                                    CornerRadius="20"
+                                    HorizontalAlignment="Left"
+                                    Width="0">
+                                <Border.Background>
+                                    <ImageBrush ImageSource="/Image/gauge_loading_01.png" 
+                                                Stretch="Fill"/>
+                                </Border.Background>
+                            </Border>
+                        </Border>
+                    </Border>
+
+                    <!-- 숨겨진 실제 ProgressBar (값 저장용) -->
+                    <ProgressBar x:Name="UpdateProgressBar"
+                                 Height="0"
+                                 Visibility="Collapsed"
+                                 Minimum="0"
+                                 Maximum="100"
+                                 Value="0"/>
+
+                    <!-- 진행률 퍼센트 -->
+                    <TextBlock x:Name="ProgressPercentText"
+                               Text="0%"
+                               FontSize="28"
+                               Foreground="#00CED1"
+                               HorizontalAlignment="Center"
+                               Margin="0,10,0,0"
+                               FontWeight="Bold">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </StackPanel>
+
+                <!-- 버튼 영역 -->
+                <StackPanel Grid.Row="3" 
+                            Orientation="Horizontal" 
+                            HorizontalAlignment="Center"
+                            x:Name="ButtonPanel">
+                    <!-- 네 버튼 (btn_yes_00) -->
+                    <Border x:Name="YesButton"
+                            Width="220"
+                            Height="80"
+                            CornerRadius="15"
+                            Margin="20,0"
+                            Cursor="Hand"
+                            MouseEnter="YesButton_MouseEnter"
+                            MouseLeave="YesButton_MouseLeave"
+                            MouseLeftButtonDown="YesButton_Click">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_yes_00.png" 
+                                        Stretch="Fill"/>
+                        </Border.Background>
+                        <TextBlock Text="네"
+                                   FontSize="38"
+                                   FontWeight="Bold"
+                                   Foreground="#e0eaec"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Effect>
+                                <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                    </Border>
+
+                    <!-- 아니요 버튼 (btn_no_00) -->
+                    <Border x:Name="NoButton"
+                            Width="220"
+                            Height="80"
+                            CornerRadius="15"
+                            Margin="20,0"
+                            Cursor="Hand"
+                            MouseEnter="NoButton_MouseEnter"
+                            MouseLeave="NoButton_MouseLeave"
+                            MouseLeftButtonDown="NoButton_Click">
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_no_00.png" 
+                                        Stretch="Fill"/>
+                        </Border.Background>
+                        <TextBlock Text="아니요"
+                                   FontSize="38"
+                                   FontWeight="Bold"
+                                   Foreground="#e0eaec"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Effect>
+                                <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                    </Border>
+
+                    <!-- 취소 버튼 (업데이트 진행 중일 때 표시, btn_no_00) -->
+                    <!-- ⭐ 수정: MouseLeftButtonDown 이벤트 추가 -->
+                    <Border x:Name="CancelButton"
+        Width="220"
+        Height="80"
+        CornerRadius="15"
+        Margin="20,0"
+        Cursor="Hand"
+        Visibility="Collapsed"
+        MouseLeftButtonDown="CancelButton_Click">
+                        <!-- ✅ Border의 MouseLeftButtonDown -->
+                        <Border.Background>
+                            <ImageBrush ImageSource="/Image/btn_no_00.png" Stretch="Fill"/>
+                        </Border.Background>
+                        <TextBlock Text="취소"
+               FontSize="38"
+               FontWeight="Bold"
+               Foreground="#e0eaec"
+               HorizontalAlignment="Center"
+               VerticalAlignment="Center">
+                            <TextBlock.Effect>
+                                <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                            </TextBlock.Effect>
+                        </TextBlock>
+                    </Border>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

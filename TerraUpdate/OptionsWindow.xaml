@@ -1,0 +1,942 @@
+<Window x:Class="Updater.OptionsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="설정" 
+        Height="1028.5" 
+        Width="1451"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent">
+
+    <Window.Resources>
+        <!-- 둥근 탭 버튼 스타일 -->
+        <Style x:Key="RoundedTabButtonStyle" TargetType="Border">
+            <Setter Property="Width" Value="240"/>
+            <Setter Property="Height" Value="60"/>
+            <Setter Property="Margin" Value="15,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+        </Style>
+
+        <!-- 라디오 버튼 스타일 (이미지 기반) -->
+        <Style x:Key="ImageRadioButtonStyle" TargetType="RadioButton">
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="26"/>
+            <Setter Property="Margin" Value="25,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <StackPanel Orientation="Horizontal">
+                            <Image x:Name="RadioImage"
+                                   Width="32" Height="32"
+                                   Source="Image/icon_circle_setting_off.png"
+                                   Stretch="Fill"
+                                   Margin="0,0,15,0"/>
+                            <ContentPresenter VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="RadioImage" Property="Source" Value="Image/icon_circle_setting_on.png"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- 화살표 버튼 스타일 -->
+        <Style x:Key="ArrowButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="60"/>
+            <Setter Property="Height" Value="60"/>
+            <Setter Property="Background" Value="#3E3E42"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="FontSize" Value="28"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="#505052"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <!-- 색상 버튼 스타일 -->
+        <Style x:Key="ColorButtonStyle" TargetType="RadioButton">
+            <Setter Property="Width" Value="60"/>
+            <Setter Property="Height" Value="60"/>
+            <Setter Property="Margin" Value="10,0"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="ColorBorder"
+                                Width="60" Height="60"
+                                Background="{TemplateBinding Tag}"
+                                BorderBrush="#575e5f"
+                                BorderThickness="3"
+                                CornerRadius="30"/>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="ColorBorder" Property="BorderBrush" Value="#00CED1"/>
+                                <Setter TargetName="ColorBorder" Property="BorderThickness" Value="4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderThickness="3" CornerRadius="20" HorizontalAlignment="Left" Width="1400" Margin="0,0,0,261">
+        <Border.BorderBrush>
+            <ImageBrush/>
+        </Border.BorderBrush>
+        <Border.Background>
+            <ImageBrush ImageSource="Image/fr_password_00.png"/>
+        </Border.Background>
+        <Grid Margin="30">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" MinHeight="101"/>
+                <!-- 탭 헤더 -->
+                <RowDefinition/>
+                <!-- 컨텐츠 영역 -->
+                <RowDefinition Height="Auto" MinHeight="81"/>
+                <!-- 저장 버튼 -->
+            </Grid.RowDefinitions>
+
+            <!-- 탭 헤더 (이미지 기반) -->
+            <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="262,20,262,0" VerticalAlignment="Top" Height="60" Width="810">
+                <!-- 관리자 설정 탭 - 활성 상태 -->
+                <Border x:Name="AdminSettingHeader" 
+                        Width="240"
+                        Height="60"
+                        Margin="15,0"
+                        CornerRadius="30"
+                        Cursor="Hand"
+                        MouseLeftButtonDown="AdminSettingTab_Click">
+                    <Border.Background>
+                        <ImageBrush ImageSource="Image/btn_setting_header_on.png" 
+                                    Stretch="UniformToFill"/>
+                    </Border.Background>
+                    <TextBlock Text="관리자 설정" 
+                               FontSize="28" 
+                               FontWeight="Bold"
+                               Foreground="#f3fdff"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="3" ShadowDepth="1" Color="Black" Opacity="0.5"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </Border>
+
+                <!-- 게임설정 탭 - 비활성 상태 -->
+                <Border x:Name="GameSettingHeader" 
+                        Width="240"
+                        Height="60"
+                        Margin="15,0"
+                        CornerRadius="30"
+                        Cursor="Hand"
+                        MouseLeftButtonDown="GameSettingTab_Click">
+                    <Border.Background>
+                        <ImageBrush ImageSource="Image/btn_setting_header_off.png" 
+                                    Stretch="UniformToFill"/>
+                    </Border.Background>
+                    <TextBlock x:Name="GameSettingHeaderText"
+                               Text="게임설정" 
+                               FontSize="28" 
+                               FontWeight="Bold"
+                               Foreground="#575e5f"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="3" ShadowDepth="1" Color="Black" Opacity="0.5"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </Border>
+
+                <!-- 시스템 설정 탭 - 비활성 상태 -->
+                <Border x:Name="SystemSettingHeader" 
+                        Width="240"
+                        Height="60"
+                        Margin="15,0"
+                        CornerRadius="30"
+                        Cursor="Hand"
+                        MouseLeftButtonDown="SystemSettingTab_Click">
+                    <Border.Background>
+                        <ImageBrush ImageSource="Image/btn_setting_header_off.png" 
+                                    Stretch="UniformToFill"/>
+                    </Border.Background>
+                    <TextBlock x:Name="SystemSettingHeaderText"
+                               Text="시스템 설정" 
+                               FontSize="28" 
+                               FontWeight="Bold"
+                               Foreground="#575e5f"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center">
+                        <TextBlock.Effect>
+                            <DropShadowEffect BlurRadius="3" ShadowDepth="1" Color="Black" Opacity="0.5"/>
+                        </TextBlock.Effect>
+                    </TextBlock>
+                </Border>
+            </StackPanel>
+
+            <!-- 구분선 -->
+            <Border Grid.Row="1" BorderBrush="#444444" BorderThickness="0,1,0,0" Margin="0,0,0,0">
+                <Grid Margin="0,20,0,0">
+                    <!-- 관리자 설정 탭 -->
+                    <ScrollViewer x:Name="AdminSettingContent" 
+                                  VerticalScrollBarVisibility="Auto"
+                                  Visibility="Visible"
+                                  Margin="40,10,40,-10">
+                        <StackPanel Margin="0,0,0,30">
+                            <!-- 이전 비밀번호 -->
+                            <Grid Margin="0,0,0,40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="▶" 
+                                               FontSize="20" 
+                                               Foreground="#888888"
+                                               Margin="0,0,15,0"/>
+                                    <TextBlock Text="이전 비밀번호" 
+                                               FontSize="28" 
+                                               Foreground="#ffffff" 
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Border Grid.Column="1" 
+                                        Height="78"
+                                        CornerRadius="8"
+                                        ClipToBounds="True"
+                                        Margin="0,0,0,0" 
+                                        Width="633">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="Image/fr_password_blank_00.png" 
+                                                    Stretch="UniformToFill"/>
+                                    </Border.Background>
+                                    <PasswordBox x:Name="OldPasswordBox"
+                                                 FontSize="24"
+                                                 PasswordChar="*"
+                                                 MaxLength="5"
+                                                 Background="Transparent"
+                                                 Foreground="White"
+                                                 BorderThickness="0"
+                                                 Padding="20,0"
+                                                 VerticalContentAlignment="Center"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- 새로운 비밀번호 -->
+                            <Grid Margin="0,0,0,40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="▶" 
+                                               FontSize="20" 
+                                               Foreground="#888888"
+                                               Margin="0,0,15,0"/>
+                                    <TextBlock Text="새로운 비밀번호" 
+                                               FontSize="28" 
+                                               Foreground="#ffffff" 
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Border Grid.Column="1" 
+                                        Height="78"
+                                        CornerRadius="8"
+                                        ClipToBounds="True"
+                                        Margin="0,0,0,0"
+                                        Width="633">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="Image/fr_password_blank_00.png" 
+                                                    Stretch="UniformToFill"/>
+                                    </Border.Background>
+                                    <PasswordBox x:Name="NewPasswordBox"
+                                                 FontSize="24"
+                                                 PasswordChar="*"
+                                                 MaxLength="5"
+                                                 Background="Transparent"
+                                                 Foreground="White"
+                                                 BorderThickness="0"
+                                                 Padding="20,0"
+                                                 VerticalContentAlignment="Center"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- 비밀번호 재입력 -->
+                            <Grid Margin="0,0,0,40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="▶" 
+                                               FontSize="20" 
+                                               Foreground="#888888"
+                                               Margin="0,0,15,0"/>
+                                    <TextBlock Text="비밀번호 재입력" 
+                                               FontSize="28" 
+                                               Foreground="#ffffff" 
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <Border Grid.Column="1" 
+                                        Height="76"
+                                        CornerRadius="8"
+                                        ClipToBounds="True" Width="633">
+                                    <Border.Background>
+                                        <ImageBrush ImageSource="Image/fr_password_blank_00.png" 
+                                                    Stretch="UniformToFill"/>
+                                    </Border.Background>
+                                    <PasswordBox x:Name="ConfirmPasswordBox"
+                                                 FontSize="24"
+                                                 PasswordChar="●"
+                                                 MaxLength="5"
+                                                 Background="Transparent"
+                                                 Foreground="White"
+                                                 BorderThickness="0"
+                                                 Padding="20,0"
+                                                 VerticalContentAlignment="Center"/>
+                                </Border>
+                            </Grid>
+
+                            <!-- 구분선 -->
+                            <Border BorderBrush="#444444" BorderThickness="0,1,0,0" Margin="0,0,0,40"/>
+
+                            <!-- 연습장 시간 설정 -->
+                            <Grid Margin="0,0,0,30">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="연습장 시간 설정" 
+                                           FontSize="32" 
+                                           Foreground="#e0eaec" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                                    <Button Content="◀" 
+                                            Style="{StaticResource ArrowButtonStyle}"
+                                            Click="DecreasePracticeTime_Click">
+                                        <Button.Background>
+                                            <ImageBrush/>
+                                        </Button.Background>
+                                    </Button>
+                                    <TextBox x:Name="PracticeTimeText"
+                                             Width="150"
+                                             Height="60"
+                                             Text="60"
+                                             FontSize="28"
+                                             TextAlignment="Center"
+                                             VerticalContentAlignment="Center"
+                                             Foreground="White"
+                                             BorderBrush="#575e5f"
+                                             Margin="15,0" SelectionOpacity="0" BorderThickness="0">
+                                        <TextBox.Background>
+                                            <ImageBrush ImageSource="Image/fr_password_blank_01.png"/>
+                                        </TextBox.Background>
+                                    </TextBox>
+                                    <Button Content="▶" 
+                                            Style="{StaticResource ArrowButtonStyle}"
+                                            Click="IncreasePracticeTime_Click">
+                                        <Button.Background>
+                                            <ImageBrush/>
+                                        </Button.Background>
+                                    </Button>
+                                    <TextBlock Text="분" 
+                                               FontSize="28" 
+                                               Foreground="White" 
+                                               VerticalAlignment="Center"
+                                               Margin="15,0,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- 게임설정 탭 -->
+                    <ScrollViewer x:Name="GameSettingContent" 
+                                  VerticalScrollBarVisibility="Auto"
+                                  Margin="40,22,10,0" Visibility="Collapsed">
+                        <StackPanel Height="530" Width="1274">
+                            <!-- 멀리건 -->
+                            <Grid Margin="0,0,0,60">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="멀리건" 
+                                           FontSize="28" 
+                                           Foreground="#ffffff" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton x:Name="Mulligan_Unlimited" 
+                                                 Content="무제한" 
+                                                 GroupName="Mulligan"
+                                                 Tag="0"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Mulligan_1" 
+                                                 Content="1개" 
+                                                 GroupName="Mulligan"
+                                                 Tag="1"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Mulligan_2" 
+                                                 Content="2개" 
+                                                 GroupName="Mulligan"
+                                                 Tag="2"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Mulligan_3" 
+                                                 Content="3개" 
+                                                 GroupName="Mulligan"
+                                                 Tag="3"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Mulligan_5" 
+                                                 Content="5개" 
+                                                 GroupName="Mulligan"
+                                                 Tag="5"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 컨시드 -->
+                            <Grid Margin="0,0,0,60">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="컨시드" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton x:Name="Concede_None" 
+                                                 Content="없음" 
+                                                 GroupName="Concede"
+                                                 Tag="0"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Concede_1m" 
+                                                 Content="1m" 
+                                                 GroupName="Concede"
+                                                 Tag="1"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Concede_125m" 
+                                                 Content="1.25m" 
+                                                 GroupName="Concede"
+                                                 Tag="2"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Concede_15m" 
+                                                 Content="1.5m" 
+                                                 GroupName="Concede"
+                                                 Tag="3"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Concede_2m" 
+                                                 Content="2m" 
+                                                 GroupName="Concede"
+                                                 Tag="4"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 난이도 설정 -->
+                            <Grid Margin="0,0,0,60">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="난이도 설정" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton x:Name="Difficulty_Amateur" 
+                                                 Content="아마추어" 
+                                                 GroupName="Difficulty"
+                                                 Tag="0"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Difficulty_SemiPro" 
+                                                 Content="세미프로" 
+                                                 GroupName="Difficulty"
+                                                 Tag="1"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Difficulty_Pro1" 
+                                                 Content="프로" 
+                                                 GroupName="Difficulty"
+                                                 Tag="2"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="Difficulty_Pro2" 
+                                                 Content="프로" 
+                                                 GroupName="Difficulty"
+                                                 Tag="3"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 연습장 시간제한 -->
+                            <Grid Margin="0,0,0,60">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="연습장 시간제한" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton x:Name="PracticeTime_Unlimited" 
+                                                 Content="무제한" 
+                                                 GroupName="PracticeTime"
+                                                 Tag="0"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="PracticeTime_10min" 
+                                                 Content="10분" 
+                                                 GroupName="PracticeTime"
+                                                 Tag="10"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="PracticeTime_20min" 
+                                                 Content="20분" 
+                                                 GroupName="PracticeTime"
+                                                 Tag="20"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="PracticeTime_30min" 
+                                                 Content="30분" 
+                                                 GroupName="PracticeTime"
+                                                 Tag="30"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 핀위치 설정 -->
+                            <Grid Margin="0,0,0,60">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="핀위치 설정" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton x:Name="PinPosition_Center" 
+                                                 Content="중앙" 
+                                                 GroupName="PinPosition"
+                                                 Tag="0"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="PinPosition_Front" 
+                                                 Content="앞" 
+                                                 GroupName="PinPosition"
+                                                 Tag="1"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="PinPosition_Back" 
+                                                 Content="뒤" 
+                                                 GroupName="PinPosition"
+                                                 Tag="2"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="PinPosition_Random" 
+                                                 Content="랜덤" 
+                                                 GroupName="PinPosition"
+                                                 Tag="3"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- 시스템 설정 탭 -->
+                    <ScrollViewer x:Name="SystemSettingContent" 
+                                  VerticalScrollBarVisibility="Disabled"
+                                  Margin="40,-12,10,-111" Visibility="Collapsed">
+                        <StackPanel Height="554" HorizontalAlignment="Left" Width="1247">
+                            <!-- 장비 ID -->
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="장비 ID" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBox Grid.Column="1" 
+                                         x:Name="DeviceIdText"
+                                         Height="60"
+                                         Text="0"
+                                         FontSize="28"
+                                         VerticalContentAlignment="Center"
+                                         Background="#3E3E42"
+                                         Foreground="White"
+                                         BorderBrush="#575e5f"
+                                         BorderThickness="2"
+                                         Padding="20,0" Margin="0,0,72,0"/>
+                            </Grid>
+
+                            <!-- 룸번호 -->
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="룸번호" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <TextBox Grid.Column="1" 
+                                         x:Name="RoomNumberText"
+                                         Height="60"
+                                         Text="0"
+                                         FontSize="28"
+                                         VerticalContentAlignment="Center"
+                                         Background="#3E3E42"
+                                         Foreground="White"
+                                         BorderBrush="#575e5f"
+                                         BorderThickness="2"
+                                         Padding="20,0" Margin="0,0,71,0"/>
+                            </Grid>
+
+                            <!-- 스윙모션 -->
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="스윙모션" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton x:Name="SwingMotionUseRadio" 
+                                                 Content="사용" 
+                                                 GroupName="SwingMotion"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="SwingMotionNotUseRadio" 
+                                                 Content="미사용" 
+                                                 GroupName="SwingMotion"
+                                                 IsChecked="True"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 시선조절설정 -->
+                            <Grid Margin="0,0,0,20">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="시선조절설정" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="0,0,99,0">
+                                    <Button Content="◀" 
+                                            Style="{StaticResource ArrowButtonStyle}"
+                                            Click="DecreaseGazeControl_Click">
+                                        <Button.Background>
+                                            <ImageBrush/>
+                                        </Button.Background>
+                                    </Button>
+                                    <TextBox x:Name="GazeControlText"
+                                             Width="150"
+                                             Height="60"
+                                             Text="0"
+                                             FontSize="28"
+                                             TextAlignment="Center"
+                                             VerticalContentAlignment="Center"
+                                             Foreground="White"
+                                             BorderBrush="#575e5f"
+                                             Margin="15,0" BorderThickness="0">
+                                        <TextBox.Background>
+                                            <ImageBrush ImageSource="Image/fr_password_blank_01.png"/>
+                                        </TextBox.Background>
+                                    </TextBox>
+                                    <Button Content="▶" 
+                                            Style="{StaticResource ArrowButtonStyle}"
+                                            Click="IncreaseGazeControl_Click">
+                                        <Button.Background>
+                                            <ImageBrush/>
+                                        </Button.Background>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 공색상설정 -->
+                            <Grid Margin="0,0,0,20" Height="149">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="공색상설정" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="267,0,59,0" Width="921" Grid.ColumnSpan="2">
+                                    <!-- 색상 1: White -->
+                                    <StackPanel Orientation="Vertical" Margin="10,0">
+                                        <!-- 이미지 -->
+                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_white.png" Stretch="Fill"/>
+                                            </Border.Background>
+                                        </Border>
+                                        <!-- 라디오버튼 -->
+                                        <RadioButton x:Name="BallColor_White" 
+                                                     GroupName="BallColor"
+                                                     Tag="White"
+                                                     HorizontalAlignment="Center"
+                                                     Style="{StaticResource ImageRadioButtonStyle}">White</RadioButton>
+                                    </StackPanel>
+
+                                    <!-- 색상 2: Yellow -->
+                                    <StackPanel Orientation="Vertical" Margin="10,0">
+                                        <!-- 이미지 -->
+                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Yellow.png" Stretch="Fill"/>
+                                            </Border.Background>
+                                        </Border>
+                                        <!-- 라디오버튼 -->
+                                        <RadioButton x:Name="BallColor_Yellow" 
+                                                     GroupName="BallColor"
+                                                     Tag="Yellow"
+                                                     HorizontalAlignment="Center"
+                                                     Style="{StaticResource ImageRadioButtonStyle}">Yellow</RadioButton>
+                                    </StackPanel>
+
+                                    <!-- 색상 3: Green -->
+                                    <StackPanel Orientation="Vertical" Margin="10,0">
+                                        <!-- 이미지 -->
+                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Green.png" Stretch="Fill"/>
+                                            </Border.Background>
+                                        </Border>
+                                        <!-- 라디오버튼 -->
+                                        <RadioButton x:Name="BallColor_Green" 
+                                                     GroupName="BallColor"
+                                                     Tag="Green"
+                                                     HorizontalAlignment="Center"
+                                                     Style="{StaticResource ImageRadioButtonStyle}">Green</RadioButton>
+                                    </StackPanel>
+
+                                    <!-- 색상 4: Blue -->
+                                    <StackPanel Orientation="Vertical" Margin="10,0">
+                                        <!-- 이미지 -->
+                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Blue.png" Stretch="Fill"/>
+                                            </Border.Background>
+                                        </Border>
+                                        <!-- 라디오버튼 -->
+                                        <RadioButton x:Name="BallColor_Blue" 
+                                                     GroupName="BallColor"
+                                                     Tag="Blue"
+                                                     HorizontalAlignment="Center"
+                                                     Style="{StaticResource ImageRadioButtonStyle}">Blue</RadioButton>
+                                    </StackPanel>
+
+                                    <!-- 색상 5: Brown -->
+                                    <StackPanel Orientation="Vertical" Margin="10,0">
+                                        <!-- 이미지 -->
+                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
+                                            <Border.Background>
+                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Orange.png" Stretch="Fill"/>
+                                            </Border.Background>
+                                        </Border>
+                                        <!-- 라디오버튼 -->
+                                        <RadioButton x:Name="BallColor_Brown" 
+                                                     GroupName="BallColor"
+                                                     Tag="Brown"
+                                                     IsChecked="True"
+                                                     HorizontalAlignment="Center"
+                                                     Style="{StaticResource ImageRadioButtonStyle}">Brown</RadioButton>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 하드웨어 -->
+                            <Grid Margin="0,0,0,30">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="하드웨어" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Top"
+                                           Margin="0,10,0,0"/>
+
+                                <Grid Grid.Column="1">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" 
+                                               Text="Motion CAM1" 
+                                               Foreground="White" 
+                                               FontSize="16"
+                                               HorizontalAlignment="Center" 
+                                               Margin="5,5"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" 
+                                               Text="오토티업" 
+                                               Foreground="White" 
+                                               FontSize="16"
+                                               HorizontalAlignment="Center" 
+                                               Margin="5,5"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="2" 
+                                               Text="센서" 
+                                               Foreground="White" 
+                                               FontSize="16"
+                                               HorizontalAlignment="Center" 
+                                               Margin="5,5"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="3" 
+                                               Text="빔 프로젝터" 
+                                               Foreground="White" 
+                                               FontSize="16"
+                                               HorizontalAlignment="Center" 
+                                               Margin="5,5"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="4" 
+                                               Text="키오스크" 
+                                               Foreground="White" 
+                                               FontSize="16"
+                                               HorizontalAlignment="Center" 
+                                               Margin="5,5"/>
+
+                                    <Ellipse Grid.Row="1" Grid.Column="0" 
+                                             x:Name="HW_MotionCAM_LED"
+                                             Width="25" Height="25" 
+                                             Fill="Green" 
+                                             HorizontalAlignment="Center" 
+                                             Margin="5,10"/>
+                                    <Ellipse Grid.Row="1" Grid.Column="1" 
+                                             x:Name="HW_AutoTee_LED"
+                                             Width="25" Height="25" 
+                                             Fill="Green" 
+                                             HorizontalAlignment="Center" 
+                                             Margin="5,10"/>
+                                    <Ellipse Grid.Row="1" Grid.Column="2" 
+                                             x:Name="HW_Sensor_LED"
+                                             Width="25" Height="25" 
+                                             Fill="Green" 
+                                             HorizontalAlignment="Center" 
+                                             Margin="5,10"/>
+                                    <Ellipse Grid.Row="1" Grid.Column="3" 
+                                             x:Name="HW_Projector_LED"
+                                             Width="25" Height="25" 
+                                             Fill="Green" 
+                                             HorizontalAlignment="Center" 
+                                             Margin="5,10"/>
+                                    <Ellipse Grid.Row="1" Grid.Column="4" 
+                                             x:Name="HW_Kiosk_LED"
+                                             Width="25" Height="25" 
+                                             Fill="Green" 
+                                             HorizontalAlignment="Center" 
+                                             Margin="5,10"/>
+                                </Grid>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- 저장 버튼 (이미지 기반) -->
+            <Border Grid.Row="2"
+                    x:Name="SaveButtonBorder"
+                    Width="322"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="SaveButton_Click"
+                    MouseEnter="SaveButton_MouseEnter"
+                    MouseLeave="SaveButton_MouseLeave"
+                    HorizontalAlignment="Center"
+                    Margin="504,153,508,-173">
+                <Border.Background>
+                    <ImageBrush ImageSource="Image/btn_yes_00.png" 
+                                Stretch="UniformToFill"/>
+                </Border.Background>
+                <TextBlock Text="저장하기" 
+                           FontSize="38" 
+                           FontWeight="Bold"
+                           Foreground="#ffffff"
+                           HorizontalAlignment="Center" 
+                           VerticalAlignment="Center">
+                    <TextBlock.Effect>
+                        <DropShadowEffect BlurRadius="5" ShadowDepth="2" Color="Black" Opacity="0.8"/>
+                    </TextBlock.Effect>
+                </TextBlock>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
