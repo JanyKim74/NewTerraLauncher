@@ -35,12 +35,6 @@ namespace Updater
         public string RoomNumber { get; set; } = "0";
 
         /// <summary>
-        /// 스윙모션 사용 여부
-        /// </summary>
-        [JsonProperty("SwingMotionEnabled")]
-        public bool SwingMotionEnabled { get; set; } = false;
-
-        /// <summary>
         /// 시선조절 설정 (-10 ~ +10)
         /// </summary>
         [JsonProperty("GazeControl")]
@@ -51,6 +45,12 @@ namespace Updater
         /// </summary>
         [JsonProperty("BallColor")]
         public string BallColor { get; set; } = "Brown";
+
+        /// <summary>
+        /// ⭐ NEW: 비밀번호 사용 여부 (0=미적용, 1=적용)
+        /// </summary>
+        [JsonProperty("UsePassword")]
+        public int UsePassword { get; set; } = 1;  // 기본값: 1 (적용)
 
         /// <summary>
         /// 하드웨어 상태
@@ -65,19 +65,19 @@ namespace Updater
     public class HardwareStatus
     {
         [JsonProperty("MotionCAM")]
-        public bool MotionCAM { get; set; } = true;  // Green
+        public bool MotionCAM { get; set; } = true;
 
         [JsonProperty("AutoTee")]
-        public bool AutoTee { get; set; } = false;   // Red
+        public bool AutoTee { get; set; } = false;
 
         [JsonProperty("Sensor")]
-        public bool Sensor { get; set; } = false;    // Red
+        public bool Sensor { get; set; } = false;
 
         [JsonProperty("Projector")]
-        public bool Projector { get; set; } = true;  // Green
+        public bool Projector { get; set; } = true;
 
         [JsonProperty("Kiosk")]
-        public bool Kiosk { get; set; } = true;      // Green
+        public bool Kiosk { get; set; } = true;
     }
 
     /// <summary>
@@ -109,6 +109,7 @@ namespace Updater
                     Console.WriteLine($"  - 연습장 시간: {config.PracticeTimeMinutes}분");
                     Console.WriteLine($"  - 장비 ID: {config.DeviceId}");
                     Console.WriteLine($"  - 룸 번호: {config.RoomNumber}");
+                    Console.WriteLine($"  - 비밀번호 적용: {(config.UsePassword == 1 ? "✅ 적용" : "❌ 미적용")}");
                     return config;
                 }
                 else
@@ -153,9 +154,7 @@ namespace Updater
                 Console.WriteLine($"  - 연습장 시간: {config.PracticeTimeMinutes}분");
                 Console.WriteLine($"  - 장비 ID: {config.DeviceId}");
                 Console.WriteLine($"  - 룸 번호: {config.RoomNumber}");
-                Console.WriteLine($"  - 스윙모션: {(config.SwingMotionEnabled ? "사용" : "미사용")}");
-                Console.WriteLine($"  - 시선조절: {config.GazeControl}");
-                Console.WriteLine($"  - 공 색상: {config.BallColor}");
+                Console.WriteLine($"  - 비밀번호 적용: {(config.UsePassword == 1 ? "✅ 적용" : "❌ 미적용")}");
             }
             catch (Exception ex)
             {
@@ -170,6 +169,12 @@ namespace Updater
         public static bool ValidatePassword(string inputPassword)
         {
             var config = Load();
+            // UsePassword = 1일 때만 비밀번호 검증
+            if (config.UsePassword == 0)
+            {
+                Console.WriteLine($"[AdminConfig] 비밀번호 검증 생략 (UsePassword = 0)");
+                return true;
+            }
             return config.AdminPassword == inputPassword;
         }
 

@@ -12,10 +12,9 @@ namespace Updater
 {
     public partial class OptionsWindow : Window
     {
-        private DefaultGameData gameData;      // ParkDay\Saved\defaultGameData.json
-        private AdminConfig adminConfig;       // ParkDay\Saved\adminConfig.json
+        private DefaultGameData gameData;
+        private AdminConfig adminConfig;
 
-        // ⭐ 추가: 각 탭의 설정 로드 여부 플래그
         private bool isAdminSettingLoaded = false;
         private bool isGameSettingLoaded = false;
         private bool isSystemSettingLoaded = false;
@@ -23,64 +22,19 @@ namespace Updater
         public OptionsWindow()
         {
             InitializeComponent();
-            // Visual Tree가 완전히 로드된 후에 설정 로드
             this.Loaded += OptionsWindow_Loaded;
         }
-
 
         private void OptionsWindow_Loaded(object sender, RoutedEventArgs e)
         {
             Console.WriteLine("[OptionsWindow] Window Loaded 이벤트 발생");
-
-            // ⭐ Dispatcher를 사용하여 UI 렌더링 완료 후 로드
-            // Visual Tree가 완전히 렌더링될 때까지 대기
-            this.Dispatcher.BeginInvoke(
-                System.Windows.Threading.DispatcherPriority.Loaded,
-                new Action(() =>
-                {
-                    Console.WriteLine("[OptionsWindow] UI 렌더링 완료 - 설정 로드 시작");
-
-                    // 모든 설정을 미리 로드 (null 방지)
-                    // SaveGameOptions() 호출 시 gameData가 null이 되는 문제 해결
-                    LoadAdminSettingsOnce();
-                    LoadGameSettingsOnce();
-                    LoadSystemSettingsOnce();
-
-                    Console.WriteLine("[OptionsWindow] 모든 설정 로드 완료");
-                }));
+            LoadAdminSettingsOnce();
+            LoadSystemSettings();
+            LoadGameOptions();
         }
 
         #region 데이터 로드
 
-        /// <summary>
-        /// 모든 설정 로드
-        /// </summary>
-        private void LoadAllSettings()
-        {
-            try
-            {
-                // 1. 게임 옵션 로드 (defaultGameData.json)
-                LoadGameOptions();
-
-                // 2. 관리자 설정 로드 (adminConfig.json)
-                LoadAdminSettings();
-
-                // 3. 시스템 설정 로드 (adminConfig.json)
-                LoadSystemSettings();
-
-                Console.WriteLine("[OptionsWindow] 모든 설정 로드 완료");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"설정 로드 실패: {ex.Message}", "오류",
-                    MessageBoxButton.OK, MessageBoxImage.Error);
-                Console.WriteLine($"[OptionsWindow] 설정 로드 오류: {ex}");
-            }
-        }
-
-        /// <summary>
-        /// 게임 옵션 로드 (defaultGameData.json)
-        /// </summary>
         private void LoadGameOptions()
         {
             try
@@ -88,12 +42,15 @@ namespace Updater
                 gameData = GameOptionsManager.Load();
                 var options = gameData.GameOptions;
 
-                // 게임설정 탭
-                SetRadioButton("Mulligan", options.MulliganCount);
-                SetRadioButton("Concede", options.ConcedeDistance);
-                SetRadioButton("Difficulty", options.Difficulty);
-                SetRadioButton("PracticeTime", options.PracticeTimeLimit);
-                SetRadioButton("PinPosition", options.PinPosition);
+                // ⭐ 멀리건: 파일값 → UI값으로 변환
+                int mulliganUIValue = GameOptionsManager.ConvertMulliganFileToUI(options.Mulligan_Count);
+                Console.WriteLine($"[LoadGameOptions] 멀리건 변환: 파일값={options.Mulligan_Count} → UI값={mulliganUIValue}");
+                SetRadioButton("Mulligan", mulliganUIValue);
+                SetRadioButton("Concede", options.Concede_Distance);
+                SetRadioButton("GreenSpeed", options.Green_Speed);
+                SetRadioButton("CameraMode", options.Camera_Mode);
+                SetRadioButton("SwingMotion", options.SwingMotion);
+                SetRadioButton("PinPosition", options.HolecupPosition);
 
                 Console.WriteLine("[OptionsWindow] 게임 옵션 로드 완료 (defaultGameData.json)");
             }
@@ -103,17 +60,15 @@ namespace Updater
             }
         }
 
-        /// <summary>
-        /// 관리자 설정 로드 (adminConfig.json)
-        /// </summary>
         private void LoadAdminSettings()
         {
             try
             {
                 adminConfig = AdminConfigManager.Load();
-
-                // 관리자 설정 탭
                 PracticeTimeText.Text = adminConfig.PracticeTimeMinutes.ToString();
+
+                // ⭐ UsePassword 토글 설정 (0 = 미적용, 1 = 적용)
+                SetPasswordToggle(adminConfig.UsePassword);
 
                 Console.WriteLine("[OptionsWindow] 관리자 설정 로드 완료 (adminConfig.json)");
             }
@@ -123,10 +78,6 @@ namespace Updater
             }
         }
 
-        /// <summary>
-        /// 시스템 설정 로드 (adminConfig.json)
-        /// ⭐ SwingMotion이 defaultGameData.json에도 있으므로 두 곳 모두 동기화
-        /// </summary>
         private void LoadSystemSettings()
         {
             try
@@ -136,21 +87,11 @@ namespace Updater
                     adminConfig = AdminConfigManager.Load();
                 }
 
-                // 시스템 설정 탭
                 DeviceIdText.Text = adminConfig.DeviceId;
                 RoomNumberText.Text = adminConfig.RoomNumber;
                 GazeControlText.Text = adminConfig.GazeControl.ToString();
 
-                // 스윙모션 - adminConfig에서 우선 로드
-                SwingMotionUseRadio.IsChecked = adminConfig.SwingMotionEnabled;
-                SwingMotionNotUseRadio.IsChecked = !adminConfig.SwingMotionEnabled;
-
-                Console.WriteLine($"[시스템 설정] SwingMotion (adminConfig): {(adminConfig.SwingMotionEnabled ? "사용" : "미사용")}");
-
-                // 공 색상
-                SetBallColor(adminConfig.BallColor);
-
-                // 하드웨어 상태
+               // SetBallColor(adminConfig.BallColor);
                 UpdateHardwareLEDs();
 
                 Console.WriteLine("[OptionsWindow] 시스템 설정 로드 완료 (adminConfig.json)");
@@ -162,47 +103,105 @@ namespace Updater
         }
 
         /// <summary>
-        /// 공 색상 설정
+        /// ⭐ UsePassword 토글 설정 (0 = 미적용, 1 = 적용)
         /// </summary>
-        private void SetBallColor(string color)
+        private void SetPasswordToggle(int usePassword)
         {
-            switch (color)
+            bool isPasswordEnabled = (usePassword == 1);
+
+            try
             {
-                case "White":
-                    BallColor_White.IsChecked = true;
-                    break;
-                case "Yellow":
-                    BallColor_Yellow.IsChecked = true;
-                    break;
-                case "Green":
-                    BallColor_Green.IsChecked = true;
-                    break;
-                case "Blue":
-                    BallColor_Blue.IsChecked = true;
-                    break;
-                case "Brown":
-                default:
-                    BallColor_Brown.IsChecked = true;
-                    break;
+                if (PasswordEnabled != null)
+                    PasswordEnabled.IsChecked = isPasswordEnabled;
+                if (PasswordDisabled != null)
+                    PasswordDisabled.IsChecked = !isPasswordEnabled;
+
+                UpdatePasswordFieldsEnabled(isPasswordEnabled);
+
+                Console.WriteLine($"[UsePassword] {(isPasswordEnabled ? "✅ 적용 (1)" : "❌ 미적용 (0)")} 로드됨");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[SetPasswordToggle] 오류: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// 선택된 공 색상 가져오기
+        /// ⭐ 비밀번호 입력 필드 활성화/비활성화
         /// </summary>
-        private string GetSelectedBallColor()
+        private void UpdatePasswordFieldsEnabled(bool isEnabled)
         {
-            if (BallColor_White.IsChecked == true) return "White";
-            if (BallColor_Yellow.IsChecked == true) return "Yellow";
-            if (BallColor_Green.IsChecked == true) return "Green";
-            if (BallColor_Blue.IsChecked == true) return "Blue";
-            if (BallColor_Brown.IsChecked == true) return "Brown";
-            return "Brown"; // 기본값
+            try
+            {
+                if (OldPasswordBox != null) OldPasswordBox.IsEnabled = isEnabled;
+                if (NewPasswordBox != null) NewPasswordBox.IsEnabled = isEnabled;
+                if (ConfirmPasswordBox != null) ConfirmPasswordBox.IsEnabled = isEnabled;
+
+                Console.WriteLine($"[비밀번호필드] {(isEnabled ? "활성화" : "비활성화")}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[UpdatePasswordFieldsEnabled] 오류: {ex.Message}");
+            }
         }
 
         /// <summary>
-        /// 하드웨어 LED 업데이트
+        /// ⭐ UsePassword 토글 변경 이벤트
         /// </summary>
+        public void OnPasswordToggleChanged(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (PasswordEnabled?.IsChecked == true)
+                {
+                    Console.WriteLine("[UsePassword] ✅ 변경: 미적용 → 적용 (1)");
+                    UpdatePasswordFieldsEnabled(true);
+                }
+                else if (PasswordDisabled?.IsChecked == true)
+                {
+                    Console.WriteLine("[UsePassword] ❌ 변경: 적용 → 미적용 (0)");
+                    UpdatePasswordFieldsEnabled(false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[OnPasswordToggleChanged] 오류: {ex.Message}");
+            }
+        }
+
+        //private void SetBallColor(string color)
+        //{
+        //    switch (color)
+        //    {
+        //        case "White":
+        //            BallColor_White.IsChecked = true;
+        //            break;
+        //        case "Yellow":
+        //            BallColor_Yellow.IsChecked = true;
+        //            break;
+        //        case "Green":
+        //            BallColor_Green.IsChecked = true;
+        //            break;
+        //        case "Blue":
+        //            BallColor_Blue.IsChecked = true;
+        //            break;
+        //        case "Brown":
+        //        default:
+        //            BallColor_Brown.IsChecked = true;
+        //            break;
+        //    }
+        //}
+
+        //private string GetSelectedBallColor()
+        //{
+        //    if (BallColor_White.IsChecked == true) return "White";
+        //    if (BallColor_Yellow.IsChecked == true) return "Yellow";
+        //    if (BallColor_Green.IsChecked == true) return "Green";
+        //    if (BallColor_Blue.IsChecked == true) return "Blue";
+        //    if (BallColor_Brown.IsChecked == true) return "Brown";
+        //    return "Brown";
+        //}
+
         private void UpdateHardwareLEDs()
         {
             if (adminConfig?.HardwareStatus != null)
@@ -220,87 +219,35 @@ namespace Updater
             }
         }
 
-        /// <summary>
-        /// 라디오 버튼 설정
-        /// </summary>
-
-        /// <summary>
-        /// 라디오 버튼 설정
-        /// ⭐ LogicalTreeHelper 사용 (Visibility.Collapsed된 컨트롤도 검색 가능)
-        /// </summary>
         private void SetRadioButton(string groupName, int value)
         {
-            Console.WriteLine($"[SetRadioButton] 시작 - GroupName: {groupName}, Value: {value}");
-
-            // ⭐ LogicalTreeHelper 사용 - Visibility.Collapsed 무관하게 모든 RadioButton 검색
+            Console.WriteLine($"[SetRadioButton] GroupName: {groupName}, Value: {value}");
             var radioButtons = FindLogicalChildren<RadioButton>(this);
-            int totalCount = 0;
             int matchCount = 0;
 
-            var radioList = radioButtons.ToList();
-            Console.WriteLine($"[SetRadioButton] Logical Tree 검색 시작 - 전체 RadioButton 수: {radioList.Count}");
-
-            foreach (var rb in radioList)
+            foreach (var rb in radioButtons)
             {
-                if (rb.GroupName == groupName)
+                if (rb.GroupName == groupName && rb.Tag != null)
                 {
-                    totalCount++;
-                    Console.WriteLine($"  ✓ 찾은 버튼: Name={rb.Name}, GroupName={rb.GroupName}, Tag={rb.Tag}, IsChecked={rb.IsChecked}");
-
-                    if (rb.Tag != null)
+                    if (int.TryParse(rb.Tag.ToString(), out int tagValue))
                     {
-                        int tagValue;
-                        if (int.TryParse(rb.Tag.ToString(), out tagValue))
+                        if (tagValue == value)
                         {
-                            Console.WriteLine($"    Tag 파싱 성공: {tagValue}");
-                            if (tagValue == value)
-                            {
-                                Console.WriteLine($"    ✅ 값 매칭! {rb.Name}을(를) 체크합니다.");
-                                rb.IsChecked = true;
-                                matchCount++;
-                                return;
-                            }
+                            rb.IsChecked = true;
+                            matchCount++;
+                            Console.WriteLine($"  ✓ {rb.Name} 체크");
+                            return;
                         }
-                        else
-                        {
-                            Console.WriteLine($"    ❌ Tag 파싱 실패: '{rb.Tag}'");
-                        }
-                    }
-                    else
-                    {
-                        Console.WriteLine($"    ⚠️ Tag가 null입니다!");
                     }
                 }
             }
 
-            Console.WriteLine($"[SetRadioButton] 완료 - GroupName: {groupName}, 찾은 버튼 수: {totalCount}, 매칭된 버튼: {matchCount}");
-
-            if (totalCount == 0)
+            if (matchCount == 0)
             {
-                Console.WriteLine($"[SetRadioButton] ❌ 심각한 오류: GroupName '{groupName}'을 가진 RadioButton이 없습니다!");
-                Console.WriteLine($"[SetRadioButton] → 전체 RadioButton 수: {radioList.Count}");
-                if (radioList.Count > 0)
-                {
-                    var allGroupNames = string.Join(", ", radioList.Select(rb => rb.GroupName).Distinct());
-                    Console.WriteLine($"[SetRadioButton] → 존재하는 GroupName: {allGroupNames}");
-                }
-            }
-            else if (matchCount == 0)
-            {
-                Console.WriteLine($"[SetRadioButton] ⚠️ 경고: {groupName}={value}에 해당하는 버튼을 찾지 못했습니다!");
-                var allTags = FindLogicalChildren<RadioButton>(this)
-                    .Where(rb => rb.GroupName == groupName)
-                    .Select(rb => rb.Tag ?? "null")
-                    .Distinct();
-                Console.WriteLine($"[SetRadioButton] → 찾은 버튼들의 Tag 값: {string.Join(", ", allTags)}");
+                Console.WriteLine($"[SetRadioButton] 경고: {groupName}={value}에 해당하는 버튼을 찾지 못했습니다!");
             }
         }
 
-
-        /// <summary>
-        /// 라디오 버튼 값 가져오기
-        /// ⭐ LogicalTreeHelper 사용 (Visibility.Collapsed된 컨트롤도 검색 가능)
-        /// </summary>
         private int GetRadioButtonValue(string groupName)
         {
             var radioButtons = FindLogicalChildren<RadioButton>(this);
@@ -309,8 +256,7 @@ namespace Updater
             {
                 if (rb.GroupName == groupName && rb.IsChecked == true && rb.Tag != null)
                 {
-                    int value;
-                    if (int.TryParse(rb.Tag.ToString(), out value))
+                    if (int.TryParse(rb.Tag.ToString(), out int value))
                     {
                         return value;
                     }
@@ -321,49 +267,25 @@ namespace Updater
         }
 
         /// <summary>
-        /// Visual Tree 검색 (Visibility.Collapsed된 컨트롤도 찾음)
-        /// ⭐ LogicalTreeHelper 사용 - Visibility 무관하게 모든 자식 요소 검색
+        /// LogicalTreeHelper를 사용하여 논리 트리 탐색
         /// </summary>
         private static IEnumerable<T> FindLogicalChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
             if (depObj != null)
             {
-                foreach (object rawChild in System.Windows.LogicalTreeHelper.GetChildren(depObj))
+                foreach (object child in LogicalTreeHelper.GetChildren(depObj))
                 {
-                    if (rawChild is DependencyObject child)
+                    if (child is DependencyObject depChild)
                     {
-                        if (child is T)
+                        if (depChild is T)
                         {
-                            yield return (T)child;
+                            yield return (T)depChild;
                         }
 
-                        foreach (T childOfChild in FindLogicalChildren<T>(child))
+                        foreach (T descendant in FindLogicalChildren<T>(depChild))
                         {
-                            yield return childOfChild;
+                            yield return descendant;
                         }
-                    }
-                }
-            }
-        }
-
-        /// <summary>
-        /// Visual Tree 검색 (기존 방식 - 참고용)
-        /// </summary>
-        private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
-        {
-            if (depObj != null)
-            {
-                for (int i = 0; i < VisualTreeHelper.GetChildrenCount(depObj); i++)
-                {
-                    DependencyObject child = VisualTreeHelper.GetChild(depObj, i);
-                    if (child != null && child is T)
-                    {
-                        yield return (T)child;
-                    }
-
-                    foreach (T childOfChild in FindVisualChildren<T>(child))
-                    {
-                        yield return childOfChild;
                     }
                 }
             }
@@ -373,9 +295,6 @@ namespace Updater
 
         #region 관리자 설정 탭
 
-        /// <summary>
-        /// 연습장 시간 감소
-        /// </summary>
         private void DecreasePracticeTime_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(PracticeTimeText.Text, out int currentTime))
@@ -387,9 +306,6 @@ namespace Updater
             }
         }
 
-        /// <summary>
-        /// 연습장 시간 증가
-        /// </summary>
         private void IncreasePracticeTime_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(PracticeTimeText.Text, out int currentTime))
@@ -405,9 +321,6 @@ namespace Updater
 
         #region 시스템 설정 탭
 
-        /// <summary>
-        /// 시선 조절 감소
-        /// </summary>
         private void DecreaseGazeControl_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(GazeControlText.Text, out int currentValue))
@@ -419,9 +332,6 @@ namespace Updater
             }
         }
 
-        /// <summary>
-        /// 시선 조절 증가
-        /// </summary>
         private void IncreaseGazeControl_Click(object sender, RoutedEventArgs e)
         {
             if (int.TryParse(GazeControlText.Text, out int currentValue))
@@ -443,7 +353,6 @@ namespace Updater
             GameSettingContent.Visibility = Visibility.Collapsed;
             SystemSettingContent.Visibility = Visibility.Collapsed;
 
-            // 탭 헤더 이미지 변경
             AdminSettingHeader.Background = new ImageBrush(new BitmapImage(
                 new Uri("pack://application:,,,/Image/btn_setting_header_on.png")));
             GameSettingHeader.Background = new ImageBrush(new BitmapImage(
@@ -451,14 +360,12 @@ namespace Updater
             SystemSettingHeader.Background = new ImageBrush(new BitmapImage(
                 new Uri("pack://application:,,,/Image/btn_setting_header_off.png")));
 
-            // 텍스트 색상 변경
             var adminText = AdminSettingHeader.Child as TextBlock;
             if (adminText != null) adminText.Foreground = new SolidColorBrush(Color.FromRgb(0xF3, 0xFD, 0xFF));
 
             GameSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
             SystemSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
 
-            // 관리자 설정 로드
             LoadAdminSettingsOnce();
         }
 
@@ -466,10 +373,8 @@ namespace Updater
         {
             AdminSettingContent.Visibility = Visibility.Collapsed;
             GameSettingContent.Visibility = Visibility.Visible;
-            this.UpdateLayout();
             SystemSettingContent.Visibility = Visibility.Collapsed;
 
-            // 탭 헤더 이미지 변경
             AdminSettingHeader.Background = new ImageBrush(new BitmapImage(
                 new Uri("pack://application:,,,/Image/btn_setting_header_off.png")));
             GameSettingHeader.Background = new ImageBrush(new BitmapImage(
@@ -477,14 +382,12 @@ namespace Updater
             SystemSettingHeader.Background = new ImageBrush(new BitmapImage(
                 new Uri("pack://application:,,,/Image/btn_setting_header_off.png")));
 
-            // 텍스트 색상 변경
             var adminText = AdminSettingHeader.Child as TextBlock;
             if (adminText != null) adminText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
 
             GameSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0xF3, 0xFD, 0xFF));
             SystemSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
 
-            // 게임 설정 로드
             LoadGameSettingsOnce();
         }
 
@@ -494,7 +397,6 @@ namespace Updater
             GameSettingContent.Visibility = Visibility.Collapsed;
             SystemSettingContent.Visibility = Visibility.Visible;
 
-            // 탭 헤더 이미지 변경
             AdminSettingHeader.Background = new ImageBrush(new BitmapImage(
                 new Uri("pack://application:,,,/Image/btn_setting_header_off.png")));
             GameSettingHeader.Background = new ImageBrush(new BitmapImage(
@@ -502,14 +404,12 @@ namespace Updater
             SystemSettingHeader.Background = new ImageBrush(new BitmapImage(
                 new Uri("pack://application:,,,/Image/btn_setting_header_on.png")));
 
-            // 텍스트 색상 변경
             var adminText = AdminSettingHeader.Child as TextBlock;
             if (adminText != null) adminText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
 
             GameSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
             SystemSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0xF3, 0xFD, 0xFF));
 
-            // 시스템 설정 로드
             LoadSystemSettingsOnce();
         }
 
@@ -525,24 +425,8 @@ namespace Updater
                 Console.WriteLine("[저장 시작]");
                 Console.WriteLine("════════════════════════════════════════════════════════");
 
-                // ⭐ 게임 옵션이 null이 아닌지 확인
-                if (gameData == null)
-                {
-                    Console.WriteLine("[오류] gameData가 null입니다. 강제 로드를 시도합니다.");
-                    gameData = GameOptionsManager.Load();
-                    if (gameData == null)
-                    {
-                        throw new Exception("게임 데이터를 로드할 수 없습니다.");
-                    }
-                }
-
-                // 1. 관리자 설정 저장 (adminConfig.json)
                 SaveAdminSettings();
-
-                // 2. 게임 옵션 저장 (defaultGameData.json)
                 SaveGameOptions();
-
-                // 3. 시스템 설정 저장 (adminConfig.json)
                 SaveSystemSettings();
 
                 Console.WriteLine("════════════════════════════════════════════════════════");
@@ -563,20 +447,29 @@ namespace Updater
             }
         }
 
-        /// <summary>
-        /// 관리자 설정 저장 (adminConfig.json)
-        /// </summary>
         private void SaveAdminSettings()
         {
             Console.WriteLine("[관리자 설정 저장 시작]");
 
-            // 비밀번호 변경 확인
-            if (!string.IsNullOrEmpty(OldPasswordBox.Password))
+            // ⭐ UsePassword 저장 (0 = 미적용, 1 = 적용)
+            adminConfig.UsePassword = (PasswordEnabled?.IsChecked == true) ? 1 : 0;
+            Console.WriteLine($"  비밀번호 사용: {(adminConfig.UsePassword == 1 ? "✅ 적용 (1)" : "❌ 미적용 (0)")}");
+
+            // 비밀번호 변경 (UsePassword가 1일 때만)
+            if (adminConfig.UsePassword == 1 && !string.IsNullOrEmpty(OldPasswordBox.Password))
             {
                 if (!ValidatePasswordChange())
                 {
                     throw new Exception("비밀번호 변경 검증 실패");
                 }
+            }
+            else if (adminConfig.UsePassword == 1)
+            {
+                Console.WriteLine("  [비밀번호] 변경하지 않음 (기존 비밀번호 유지)");
+            }
+            else
+            {
+                Console.WriteLine("  [비밀번호] 미적용 - 비밀번호 변경 불가능");
             }
 
             // 연습장 시간
@@ -590,81 +483,56 @@ namespace Updater
             Console.WriteLine("[관리자 설정 저장 완료] → adminConfig.json");
         }
 
-        /// <summary>
-        /// 게임 옵션 저장 (defaultGameData.json)
-        /// </summary>
         private void SaveGameOptions()
         {
             Console.WriteLine("[게임 옵션 저장 시작]");
 
-            // ⭐ gameData null 체크
-            if (gameData == null)
-            {
-                Console.WriteLine("[오류] gameData가 null입니다!");
-                throw new Exception("게임 데이터가 초기화되지 않았습니다.");
-            }
-
             var options = gameData.GameOptions;
-            options.MulliganCount = GetRadioButtonValue("Mulligan");
-            options.ConcedeDistance = GetRadioButtonValue("Concede");
-            options.Difficulty = GetRadioButtonValue("Difficulty");
-            options.PracticeTimeLimit = GetRadioButtonValue("PracticeTime");
-            options.PinPosition = GetRadioButtonValue("PinPosition");
+            // ⭐ 멀리건: UI값 → 파일값으로 변환
+            int mulliganUIValue = GetRadioButtonValue("Mulligan");
+            int mulliganFileValue = GameOptionsManager.ConvertMulliganUIToFile(mulliganUIValue);
+            options.Mulligan_Count = mulliganFileValue;
+            Console.WriteLine($"  [멀리건] UI값: {mulliganUIValue} → 파일값: {mulliganFileValue}");
+            options.Concede_Distance = GetRadioButtonValue("Concede");
+            options.Green_Speed = GetRadioButtonValue("GreenSpeed");
+            options.Camera_Mode = GetRadioButtonValue("CameraMode");
+            options.SwingMotion = GetRadioButtonValue("SwingMotion");
+            options.HolecupPosition = GetRadioButtonValue("PinPosition");
 
-            Console.WriteLine($"  멀리건: {options.MulliganCount}");
-            Console.WriteLine($"  컨시드: {options.ConcedeDistance}");
-            Console.WriteLine($"  난이도: {options.Difficulty}");
-            Console.WriteLine($"  연습장 시간제한: {options.PracticeTimeLimit}");
-            Console.WriteLine($"  핀위치: {options.PinPosition}");
+            Console.WriteLine($"  멀리건: {options.Mulligan_Count}");
+            Console.WriteLine($"  컨시드: {options.Concede_Distance}");
+            Console.WriteLine($"  잔디상태: {options.Green_Speed}");
+            Console.WriteLine($"  카메라모드: {options.Camera_Mode}");
+            Console.WriteLine($"  스윙모션: {options.SwingMotion}");
+            Console.WriteLine($"  핀위치: {options.HolecupPosition}");
 
             GameOptionsManager.Save(gameData);
             Console.WriteLine("[게임 옵션 저장 완료] → defaultGameData.json");
         }
 
-        /// <summary>
-        /// 시스템 설정 저장 (adminConfig.json)
-        /// ⭐ SwingMotion을 GameOptions.SwingMotion에도 적용
-        /// </summary>
         private void SaveSystemSettings()
         {
             Console.WriteLine("[시스템 설정 저장 시작]");
 
             adminConfig.DeviceId = DeviceIdText.Text;
             adminConfig.RoomNumber = RoomNumberText.Text;
-            adminConfig.SwingMotionEnabled = SwingMotionUseRadio.IsChecked == true;
 
             if (int.TryParse(GazeControlText.Text, out int gazeControl))
             {
                 adminConfig.GazeControl = gazeControl;
             }
 
-            adminConfig.BallColor = GetSelectedBallColor();
+           // adminConfig.BallColor = GetSelectedBallColor();
 
             Console.WriteLine($"  장비 ID: {adminConfig.DeviceId}");
             Console.WriteLine($"  룸 번호: {adminConfig.RoomNumber}");
-            Console.WriteLine($"  스윙모션: {(adminConfig.SwingMotionEnabled ? "사용" : "미사용")}");
             Console.WriteLine($"  시선 조절: {adminConfig.GazeControl}");
             Console.WriteLine($"  공 색상: {adminConfig.BallColor}");
 
             AdminConfigManager.Save(adminConfig);
             Console.WriteLine("[시스템 설정 저장 완료] → adminConfig.json");
-
-            // ⭐ SwingMotion을 defaultGameData.json의 GameOptions에도 적용
-            if (gameData != null && gameData.GameOptions != null)
-            {
-                gameData.GameOptions.SwingMotion = adminConfig.SwingMotionEnabled ? 1 : 0;
-                GameOptionsManager.Save(gameData);
-                Console.WriteLine($"[게임 옵션 동기화] SwingMotion = {gameData.GameOptions.SwingMotion} → defaultGameData.json");
-            }
-            else
-            {
-                Console.WriteLine("[경고] gameData가 null이어서 SwingMotion 동기화 불가");
-            }
         }
 
-        /// <summary>
-        /// 비밀번호 변경 검증
-        /// </summary>
         private bool ValidatePasswordChange()
         {
             string oldPassword = OldPasswordBox.Password;
@@ -673,7 +541,6 @@ namespace Updater
 
             Console.WriteLine("[비밀번호 변경 검증]");
 
-            // 이전 비밀번호 확인
             if (adminConfig.AdminPassword != oldPassword)
             {
                 MessageBox.Show("이전 비밀번호가 올바르지 않습니다.", "오류",
@@ -682,7 +549,6 @@ namespace Updater
                 return false;
             }
 
-            // 새 비밀번호 길이 확인
             if (newPassword.Length != 5)
             {
                 MessageBox.Show("새 비밀번호는 5자리여야 합니다.", "오류",
@@ -691,7 +557,6 @@ namespace Updater
                 return false;
             }
 
-            // 비밀번호 일치 확인
             if (newPassword != confirmPassword)
             {
                 MessageBox.Show("새 비밀번호가 일치하지 않습니다.", "오류",
@@ -700,9 +565,8 @@ namespace Updater
                 return false;
             }
 
-            // 비밀번호 변경
             adminConfig.AdminPassword = newPassword;
-            Console.WriteLine($"  성공: 비밀번호 변경됨 ({new string('*', 5)})");
+            Console.WriteLine($"  성공: 비밀번호 변경됨");
 
             MessageBox.Show("비밀번호가 변경되었습니다.", "성공",
                 MessageBoxButton.OK, MessageBoxImage.Information);
@@ -765,37 +629,25 @@ namespace Updater
             }
         }
 
-        /// <summary>
-        /// 관리자 설정 로드 (한 번만)
-        /// </summary>
         private void LoadAdminSettingsOnce()
         {
             if (isAdminSettingLoaded) return;
-
             Console.WriteLine("[OptionsWindow] 관리자 설정 로드 시작");
             LoadAdminSettings();
             isAdminSettingLoaded = true;
         }
 
-        /// <summary>
-        /// 게임 설정 로드 (한 번만)
-        /// </summary>
         private void LoadGameSettingsOnce()
         {
             if (isGameSettingLoaded) return;
-
             Console.WriteLine("[OptionsWindow] 게임 설정 로드 시작");
             LoadGameOptions();
             isGameSettingLoaded = true;
         }
 
-        /// <summary>
-        /// 시스템 설정 로드 (한 번만)
-        /// </summary>
         private void LoadSystemSettingsOnce()
         {
             if (isSystemSettingLoaded) return;
-
             Console.WriteLine("[OptionsWindow] 시스템 설정 로드 시작");
             LoadSystemSettings();
             isSystemSettingLoaded = true;

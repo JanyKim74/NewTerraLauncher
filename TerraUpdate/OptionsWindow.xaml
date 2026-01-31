@@ -194,7 +194,7 @@
             </StackPanel>
 
             <!-- 구분선 -->
-            <Border Grid.Row="1" BorderBrush="#444444" BorderThickness="0,1,0,0" Margin="0,0,0,0">
+            <Border Grid.Row="1" BorderBrush="#444444" BorderThickness="0,1,0,0" Margin="0,0,0,10" Grid.RowSpan="2">
                 <Grid Margin="0,20,0,0">
                     <!-- 관리자 설정 탭 -->
                     <ScrollViewer x:Name="AdminSettingContent" 
@@ -202,6 +202,8 @@
                                   Visibility="Visible"
                                   Margin="40,10,40,-10">
                         <StackPanel Margin="0,0,0,30">
+
+
                             <!-- 이전 비밀번호 -->
                             <Grid Margin="0,0,0,40">
                                 <Grid.ColumnDefinitions>
@@ -325,7 +327,38 @@
 
                             <!-- 구분선 -->
                             <Border BorderBrush="#444444" BorderThickness="0,1,0,0" Margin="0,0,0,40"/>
+                            <!-- ⭐ 비밀번호 변경 기능 토글 -->
+                            <Grid Margin="0,0,0,40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="580"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
 
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Height="37">
+                                    <TextBlock Text="▶" 
+                                               FontSize="20" 
+                                               Foreground="#888888"
+                                               Margin="0,0,15,0"/>
+                                    <TextBlock Text="비밀번호 적용" 
+                                               FontSize="28" 
+                                               Foreground="#ffffff" 
+                                               FontWeight="Bold"
+                                               VerticalAlignment="Center"/>
+                                </StackPanel>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="22,0,0,0">
+                                    <RadioButton x:Name="PasswordEnabled" 
+                                                 Content="사용 " 
+                                                 GroupName="UsePassword"
+                                                 Checked="OnPasswordToggleChanged"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    <RadioButton x:Name="PasswordDisabled" 
+                                                 Content="미사용" 
+                                                 GroupName="UsePassword"
+                                                 Checked="OnPasswordToggleChanged"
+                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
+                                </StackPanel>
+                            </Grid>
                             <!-- 연습장 시간 설정 -->
                             <Grid Margin="0,0,0,30">
                                 <Grid.ColumnDefinitions>
@@ -400,7 +433,7 @@
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                                     <RadioButton x:Name="Mulligan_Unlimited" 
-                                                 Content="무제한" 
+                                                 Content="없음" 
                                                  GroupName="Mulligan"
                                                  Tag="0"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
@@ -410,19 +443,14 @@
                                                  Tag="1"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
                                     <RadioButton x:Name="Mulligan_2" 
-                                                 Content="2개" 
+                                                 Content="3개" 
                                                  GroupName="Mulligan"
                                                  Tag="2"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
                                     <RadioButton x:Name="Mulligan_3" 
-                                                 Content="3개" 
+                                                 Content="무제한" 
                                                  GroupName="Mulligan"
                                                  Tag="3"
-                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="Mulligan_5" 
-                                                 Content="5개" 
-                                                 GroupName="Mulligan"
-                                                 Tag="5"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
                                 </StackPanel>
                             </Grid>
@@ -453,24 +481,20 @@
                                                  Tag="1"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
                                     <RadioButton x:Name="Concede_125m" 
-                                                 Content="1.25m" 
+                                                 Content="1.5m" 
                                                  GroupName="Concede"
                                                  Tag="2"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
                                     <RadioButton x:Name="Concede_15m" 
-                                                 Content="1.5m" 
-                                                 GroupName="Concede"
-                                                 Tag="3"
-                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="Concede_2m" 
                                                  Content="2m" 
                                                  GroupName="Concede"
-                                                 Tag="4"
+                                                 Tag="3"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
+                                    
                                 </StackPanel>
                             </Grid>
 
-                            <!-- 난이도 설정 -->
+                            <!-- 잔디 상태 -->
                             <Grid Margin="0,0,0,60">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="280"/>
@@ -478,37 +502,37 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Grid.Column="0" 
-                                           Text="난이도 설정" 
+                                           Text="잔디 상태" 
                                            FontSize="28" 
                                            Foreground="White" 
                                            FontWeight="Bold"
                                            VerticalAlignment="Center"/>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <RadioButton x:Name="Difficulty_Amateur" 
-                                                 Content="아마추어" 
-                                                 GroupName="Difficulty"
+                                    <RadioButton x:Name="GreenSpeed_Slow" 
+                                                 Content="느림" 
+                                                 GroupName="GreenSpeed"
                                                  Tag="0"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="Difficulty_SemiPro" 
-                                                 Content="세미프로" 
-                                                 GroupName="Difficulty"
+                                    <RadioButton x:Name="GreenSpeed_Normal" 
+                                                 Content="보통" 
+                                                 GroupName="GreenSpeed"
                                                  Tag="1"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="Difficulty_Pro1" 
-                                                 Content="프로" 
-                                                 GroupName="Difficulty"
+                                    <RadioButton x:Name="GreenSpeed_Fast" 
+                                                 Content="약간 빠름" 
+                                                 GroupName="GreenSpeed"
                                                  Tag="2"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="Difficulty_Pro2" 
-                                                 Content="프로" 
-                                                 GroupName="Difficulty"
+                                    <RadioButton x:Name="GreenSpeed_bestFast" 
+                                                 Content="빠름" 
+                                                 GroupName="GreenSpeed"
                                                  Tag="3"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
                                 </StackPanel>
                             </Grid>
 
-                            <!-- 연습장 시간제한 -->
+                            <!-- 카메라 모드 -->
                             <Grid Margin="0,0,0,60">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="280"/>
@@ -516,32 +540,50 @@
                                 </Grid.ColumnDefinitions>
 
                                 <TextBlock Grid.Column="0" 
-                                           Text="연습장 시간제한" 
+                                           Text="카메라 모드" 
                                            FontSize="28" 
                                            Foreground="White" 
                                            FontWeight="Bold"
                                            VerticalAlignment="Center"/>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <RadioButton x:Name="PracticeTime_Unlimited" 
-                                                 Content="무제한" 
-                                                 GroupName="PracticeTime"
+                                    <RadioButton x:Name="CameraMode_Fixed" 
+                                                 Content="이동" 
+                                                 GroupName="CameraMode"
                                                  Tag="0"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="PracticeTime_10min" 
-                                                 Content="10분" 
-                                                 GroupName="PracticeTime"
-                                                 Tag="10"
+                                    <RadioButton x:Name="CameraMode_Move" 
+                                                 Content="고정" 
+                                                 GroupName="CameraMode"
+                                                 Tag="1"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="PracticeTime_20min" 
-                                                 Content="20분" 
-                                                 GroupName="PracticeTime"
-                                                 Tag="20"
+                                </StackPanel>
+                            </Grid>
+
+                            <!-- 스윙 모션 -->
+                            <Grid Margin="0,0,0,60">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="280"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" 
+                                           Text="스윙 모션" 
+                                           FontSize="28" 
+                                           Foreground="White" 
+                                           FontWeight="Bold"
+                                           VerticalAlignment="Center"/>
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <RadioButton x:Name="SwingMotion_Disabled" 
+                                                 Content="끄기" 
+                                                 GroupName="SwingMotion"
+                                                 Tag="0"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="PracticeTime_30min" 
-                                                 Content="30분" 
-                                                 GroupName="PracticeTime"
-                                                 Tag="30"
+                                    <RadioButton x:Name="SwingMotion_Enabled" 
+                                                 Content="켜기" 
+                                                 GroupName="SwingMotion"
+                                                 Tag="1"
                                                  Style="{StaticResource ImageRadioButtonStyle}"/>
                                 </StackPanel>
                             </Grid>
@@ -561,7 +603,7 @@
                                            VerticalAlignment="Center"/>
 
                                 <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <RadioButton x:Name="PinPosition_Center" 
+                                    <RadioButton x:Name="PinPosition_None" 
                                                  Content="중앙" 
                                                  GroupName="PinPosition"
                                                  Tag="0"
@@ -645,33 +687,6 @@
                                          Padding="20,0" Margin="0,0,71,0"/>
                             </Grid>
 
-                            <!-- 스윙모션 -->
-                            <Grid Margin="0,0,0,20">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="280"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Column="0" 
-                                           Text="스윙모션" 
-                                           FontSize="28" 
-                                           Foreground="White" 
-                                           FontWeight="Bold"
-                                           VerticalAlignment="Center"/>
-
-                                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                    <RadioButton x:Name="SwingMotionUseRadio" 
-                                                 Content="사용" 
-                                                 GroupName="SwingMotion"
-                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
-                                    <RadioButton x:Name="SwingMotionNotUseRadio" 
-                                                 Content="미사용" 
-                                                 GroupName="SwingMotion"
-                                                 IsChecked="True"
-                                                 Style="{StaticResource ImageRadioButtonStyle}"/>
-                                </StackPanel>
-                            </Grid>
-
                             <!-- 시선조절설정 -->
                             <Grid Margin="0,0,0,20">
                                 <Grid.ColumnDefinitions>
@@ -719,102 +734,7 @@
                             </Grid>
 
                             <!-- 공색상설정 -->
-                            <Grid Margin="0,0,0,20" Height="149">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="280"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Column="0" 
-                                           Text="공색상설정" 
-                                           FontSize="28" 
-                                           Foreground="White" 
-                                           FontWeight="Bold"
-                                           VerticalAlignment="Center"/>
-
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="267,0,59,0" Width="921" Grid.ColumnSpan="2">
-                                    <!-- 색상 1: White -->
-                                    <StackPanel Orientation="Vertical" Margin="10,0">
-                                        <!-- 이미지 -->
-                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_white.png" Stretch="Fill"/>
-                                            </Border.Background>
-                                        </Border>
-                                        <!-- 라디오버튼 -->
-                                        <RadioButton x:Name="BallColor_White" 
-                                                     GroupName="BallColor"
-                                                     Tag="White"
-                                                     HorizontalAlignment="Center"
-                                                     Style="{StaticResource ImageRadioButtonStyle}">White</RadioButton>
-                                    </StackPanel>
-
-                                    <!-- 색상 2: Yellow -->
-                                    <StackPanel Orientation="Vertical" Margin="10,0">
-                                        <!-- 이미지 -->
-                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Yellow.png" Stretch="Fill"/>
-                                            </Border.Background>
-                                        </Border>
-                                        <!-- 라디오버튼 -->
-                                        <RadioButton x:Name="BallColor_Yellow" 
-                                                     GroupName="BallColor"
-                                                     Tag="Yellow"
-                                                     HorizontalAlignment="Center"
-                                                     Style="{StaticResource ImageRadioButtonStyle}">Yellow</RadioButton>
-                                    </StackPanel>
-
-                                    <!-- 색상 3: Green -->
-                                    <StackPanel Orientation="Vertical" Margin="10,0">
-                                        <!-- 이미지 -->
-                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Green.png" Stretch="Fill"/>
-                                            </Border.Background>
-                                        </Border>
-                                        <!-- 라디오버튼 -->
-                                        <RadioButton x:Name="BallColor_Green" 
-                                                     GroupName="BallColor"
-                                                     Tag="Green"
-                                                     HorizontalAlignment="Center"
-                                                     Style="{StaticResource ImageRadioButtonStyle}">Green</RadioButton>
-                                    </StackPanel>
-
-                                    <!-- 색상 4: Blue -->
-                                    <StackPanel Orientation="Vertical" Margin="10,0">
-                                        <!-- 이미지 -->
-                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Blue.png" Stretch="Fill"/>
-                                            </Border.Background>
-                                        </Border>
-                                        <!-- 라디오버튼 -->
-                                        <RadioButton x:Name="BallColor_Blue" 
-                                                     GroupName="BallColor"
-                                                     Tag="Blue"
-                                                     HorizontalAlignment="Center"
-                                                     Style="{StaticResource ImageRadioButtonStyle}">Blue</RadioButton>
-                                    </StackPanel>
-
-                                    <!-- 색상 5: Brown -->
-                                    <StackPanel Orientation="Vertical" Margin="10,0">
-                                        <!-- 이미지 -->
-                                        <Border Width="70" Height="70" CornerRadius="6" Margin="0,0,0,12">
-                                            <Border.Background>
-                                                <ImageBrush ImageSource="Image/icon_circle_system_setting_Orange.png" Stretch="Fill"/>
-                                            </Border.Background>
-                                        </Border>
-                                        <!-- 라디오버튼 -->
-                                        <RadioButton x:Name="BallColor_Brown" 
-                                                     GroupName="BallColor"
-                                                     Tag="Brown"
-                                                     IsChecked="True"
-                                                     HorizontalAlignment="Center"
-                                                     Style="{StaticResource ImageRadioButtonStyle}">Brown</RadioButton>
-                                    </StackPanel>
-                                </StackPanel>
-                            </Grid>
+  
 
                             <!-- 하드웨어 -->
                             <Grid Margin="0,0,0,30">
