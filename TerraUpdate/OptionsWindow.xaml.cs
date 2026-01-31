@@ -32,8 +32,22 @@ namespace Updater
         {
             Console.WriteLine("[OptionsWindow] Window Loaded 이벤트 발생");
 
-            // ⭐ 관리자 설정 탭이 기본으로 열려있으므로 먼저 로드
-            LoadAdminSettingsOnce();
+            // ⭐ Dispatcher를 사용하여 UI 렌더링 완료 후 로드
+            // Visual Tree가 완전히 렌더링될 때까지 대기
+            this.Dispatcher.BeginInvoke(
+                System.Windows.Threading.DispatcherPriority.Loaded,
+                new Action(() =>
+                {
+                    Console.WriteLine("[OptionsWindow] UI 렌더링 완료 - 설정 로드 시작");
+
+                    // 모든 설정을 미리 로드 (null 방지)
+                    // SaveGameOptions() 호출 시 gameData가 null이 되는 문제 해결
+                    LoadAdminSettingsOnce();
+                    LoadGameSettingsOnce();
+                    LoadSystemSettingsOnce();
+
+                    Console.WriteLine("[OptionsWindow] 모든 설정 로드 완료");
+                }));
         }
 
         #region 데이터 로드
@@ -111,6 +125,7 @@ namespace Updater
 
         /// <summary>
         /// 시스템 설정 로드 (adminConfig.json)
+        /// ⭐ SwingMotion이 defaultGameData.json에도 있으므로 두 곳 모두 동기화
         /// </summary>
         private void LoadSystemSettings()
         {
@@ -126,9 +141,11 @@ namespace Updater
                 RoomNumberText.Text = adminConfig.RoomNumber;
                 GazeControlText.Text = adminConfig.GazeControl.ToString();
 
-                // 스윙모션
+                // 스윙모션 - adminConfig에서 우선 로드
                 SwingMotionUseRadio.IsChecked = adminConfig.SwingMotionEnabled;
                 SwingMotionNotUseRadio.IsChecked = !adminConfig.SwingMotionEnabled;
+
+                Console.WriteLine($"[시스템 설정] SwingMotion (adminConfig): {(adminConfig.SwingMotionEnabled ? "사용" : "미사용")}");
 
                 // 공 색상
                 SetBallColor(adminConfig.BallColor);
@@ -206,20 +223,29 @@ namespace Updater
         /// <summary>
         /// 라디오 버튼 설정
         /// </summary>
+
+        /// <summary>
+        /// 라디오 버튼 설정
+        /// ⭐ LogicalTreeHelper 사용 (Visibility.Collapsed된 컨트롤도 검색 가능)
+        /// </summary>
         private void SetRadioButton(string groupName, int value)
         {
             Console.WriteLine($"[SetRadioButton] 시작 - GroupName: {groupName}, Value: {value}");
 
-            var radioButtons = FindVisualChildren<RadioButton>(this);
+            // ⭐ LogicalTreeHelper 사용 - Visibility.Collapsed 무관하게 모든 RadioButton 검색
+            var radioButtons = FindLogicalChildren<RadioButton>(this);
             int totalCount = 0;
             int matchCount = 0;
 
-            foreach (var rb in radioButtons)
+            var radioList = radioButtons.ToList();
+            Console.WriteLine($"[SetRadioButton] Logical Tree 검색 시작 - 전체 RadioButton 수: {radioList.Count}");
+
+            foreach (var rb in radioList)
             {
                 if (rb.GroupName == groupName)
                 {
                     totalCount++;
-                    Console.WriteLine($"  찾은 버튼: Name={rb.Name}, Tag={rb.Tag}, IsChecked={rb.IsChecked}");
+                    Console.WriteLine($"  ✓ 찾은 버튼: Name={rb.Name}, GroupName={rb.GroupName}, Tag={rb.Tag}, IsChecked={rb.IsChecked}");
 
                     if (rb.Tag != null)
                     {
@@ -229,7 +255,7 @@ namespace Updater
                             Console.WriteLine($"    Tag 파싱 성공: {tagValue}");
                             if (tagValue == value)
                             {
-                                Console.WriteLine($"    ✓ 매칭! {rb.Name}을 체크합니다.");
+                                Console.WriteLine($"    ✅ 값 매칭! {rb.Name}을(를) 체크합니다.");
                                 rb.IsChecked = true;
                                 matchCount++;
                                 return;
@@ -237,31 +263,48 @@ namespace Updater
                         }
                         else
                         {
-                            Console.WriteLine($"    Tag 파싱 실패: {rb.Tag}");
+                            Console.WriteLine($"    ❌ Tag 파싱 실패: '{rb.Tag}'");
                         }
                     }
                     else
                     {
-                        Console.WriteLine($"    Tag가 null입니다!");
+                        Console.WriteLine($"    ⚠️ Tag가 null입니다!");
                     }
                 }
             }
 
             Console.WriteLine($"[SetRadioButton] 완료 - GroupName: {groupName}, 찾은 버튼 수: {totalCount}, 매칭된 버튼: {matchCount}");
 
-            if (matchCount == 0)
+            if (totalCount == 0)
             {
-                Console.WriteLine($"[SetRadioButton] 경고: {groupName}={value}에 해당하는 버튼을 찾지 못했습니다!");
+                Console.WriteLine($"[SetRadioButton] ❌ 심각한 오류: GroupName '{groupName}'을 가진 RadioButton이 없습니다!");
+                Console.WriteLine($"[SetRadioButton] → 전체 RadioButton 수: {radioList.Count}");
+                if (radioList.Count > 0)
+                {
+                    var allGroupNames = string.Join(", ", radioList.Select(rb => rb.GroupName).Distinct());
+                    Console.WriteLine($"[SetRadioButton] → 존재하는 GroupName: {allGroupNames}");
+                }
+            }
+            else if (matchCount == 0)
+            {
+                Console.WriteLine($"[SetRadioButton] ⚠️ 경고: {groupName}={value}에 해당하는 버튼을 찾지 못했습니다!");
+                var allTags = FindLogicalChildren<RadioButton>(this)
+                    .Where(rb => rb.GroupName == groupName)
+                    .Select(rb => rb.Tag ?? "null")
+                    .Distinct();
+                Console.WriteLine($"[SetRadioButton] → 찾은 버튼들의 Tag 값: {string.Join(", ", allTags)}");
             }
         }
 
+
         /// <summary>
         /// 라디오 버튼 값 가져오기
+        /// ⭐ LogicalTreeHelper 사용 (Visibility.Collapsed된 컨트롤도 검색 가능)
         /// </summary>
         private int GetRadioButtonValue(string groupName)
         {
-            var radioButtons = FindVisualChildren<RadioButton>(this);
-            
+            var radioButtons = FindLogicalChildren<RadioButton>(this);
+
             foreach (var rb in radioButtons)
             {
                 if (rb.GroupName == groupName && rb.IsChecked == true && rb.Tag != null)
@@ -273,12 +316,38 @@ namespace Updater
                     }
                 }
             }
-            
+
             return 0;
         }
 
         /// <summary>
-        /// Visual Tree 검색
+        /// Visual Tree 검색 (Visibility.Collapsed된 컨트롤도 찾음)
+        /// ⭐ LogicalTreeHelper 사용 - Visibility 무관하게 모든 자식 요소 검색
+        /// </summary>
+        private static IEnumerable<T> FindLogicalChildren<T>(DependencyObject depObj) where T : DependencyObject
+        {
+            if (depObj != null)
+            {
+                foreach (object rawChild in System.Windows.LogicalTreeHelper.GetChildren(depObj))
+                {
+                    if (rawChild is DependencyObject child)
+                    {
+                        if (child is T)
+                        {
+                            yield return (T)child;
+                        }
+
+                        foreach (T childOfChild in FindLogicalChildren<T>(child))
+                        {
+                            yield return childOfChild;
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Visual Tree 검색 (기존 방식 - 참고용)
         /// </summary>
         private static IEnumerable<T> FindVisualChildren<T>(DependencyObject depObj) where T : DependencyObject
         {
@@ -385,7 +454,7 @@ namespace Updater
             // 텍스트 색상 변경
             var adminText = AdminSettingHeader.Child as TextBlock;
             if (adminText != null) adminText.Foreground = new SolidColorBrush(Color.FromRgb(0xF3, 0xFD, 0xFF));
-            
+
             GameSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
             SystemSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
 
@@ -411,7 +480,7 @@ namespace Updater
             // 텍스트 색상 변경
             var adminText = AdminSettingHeader.Child as TextBlock;
             if (adminText != null) adminText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
-            
+
             GameSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0xF3, 0xFD, 0xFF));
             SystemSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
 
@@ -436,7 +505,7 @@ namespace Updater
             // 텍스트 색상 변경
             var adminText = AdminSettingHeader.Child as TextBlock;
             if (adminText != null) adminText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
-            
+
             GameSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0x57, 0x5E, 0x5F));
             SystemSettingHeaderText.Foreground = new SolidColorBrush(Color.FromRgb(0xF3, 0xFD, 0xFF));
 
@@ -455,6 +524,17 @@ namespace Updater
                 Console.WriteLine("════════════════════════════════════════════════════════");
                 Console.WriteLine("[저장 시작]");
                 Console.WriteLine("════════════════════════════════════════════════════════");
+
+                // ⭐ 게임 옵션이 null이 아닌지 확인
+                if (gameData == null)
+                {
+                    Console.WriteLine("[오류] gameData가 null입니다. 강제 로드를 시도합니다.");
+                    gameData = GameOptionsManager.Load();
+                    if (gameData == null)
+                    {
+                        throw new Exception("게임 데이터를 로드할 수 없습니다.");
+                    }
+                }
 
                 // 1. 관리자 설정 저장 (adminConfig.json)
                 SaveAdminSettings();
@@ -517,6 +597,13 @@ namespace Updater
         {
             Console.WriteLine("[게임 옵션 저장 시작]");
 
+            // ⭐ gameData null 체크
+            if (gameData == null)
+            {
+                Console.WriteLine("[오류] gameData가 null입니다!");
+                throw new Exception("게임 데이터가 초기화되지 않았습니다.");
+            }
+
             var options = gameData.GameOptions;
             options.MulliganCount = GetRadioButtonValue("Mulligan");
             options.ConcedeDistance = GetRadioButtonValue("Concede");
@@ -536,6 +623,7 @@ namespace Updater
 
         /// <summary>
         /// 시스템 설정 저장 (adminConfig.json)
+        /// ⭐ SwingMotion을 GameOptions.SwingMotion에도 적용
         /// </summary>
         private void SaveSystemSettings()
         {
@@ -544,7 +632,7 @@ namespace Updater
             adminConfig.DeviceId = DeviceIdText.Text;
             adminConfig.RoomNumber = RoomNumberText.Text;
             adminConfig.SwingMotionEnabled = SwingMotionUseRadio.IsChecked == true;
-            
+
             if (int.TryParse(GazeControlText.Text, out int gazeControl))
             {
                 adminConfig.GazeControl = gazeControl;
@@ -560,6 +648,18 @@ namespace Updater
 
             AdminConfigManager.Save(adminConfig);
             Console.WriteLine("[시스템 설정 저장 완료] → adminConfig.json");
+
+            // ⭐ SwingMotion을 defaultGameData.json의 GameOptions에도 적용
+            if (gameData != null && gameData.GameOptions != null)
+            {
+                gameData.GameOptions.SwingMotion = adminConfig.SwingMotionEnabled ? 1 : 0;
+                GameOptionsManager.Save(gameData);
+                Console.WriteLine($"[게임 옵션 동기화] SwingMotion = {gameData.GameOptions.SwingMotion} → defaultGameData.json");
+            }
+            else
+            {
+                Console.WriteLine("[경고] gameData가 null이어서 SwingMotion 동기화 불가");
+            }
         }
 
         /// <summary>
@@ -603,7 +703,7 @@ namespace Updater
             // 비밀번호 변경
             adminConfig.AdminPassword = newPassword;
             Console.WriteLine($"  성공: 비밀번호 변경됨 ({new string('*', 5)})");
-            
+
             MessageBox.Show("비밀번호가 변경되었습니다.", "성공",
                 MessageBoxButton.OK, MessageBoxImage.Information);
 
