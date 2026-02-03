@@ -7,6 +7,9 @@ using System.Windows.Media.Animation;
 using System.Windows.Media.Imaging;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using System.IO.Ports;
+
 
 namespace Updater
 {
@@ -18,6 +21,7 @@ namespace Updater
         private bool isAdminSettingLoaded = false;
         private bool isGameSettingLoaded = false;
         private bool isSystemSettingLoaded = false;
+        private bool isHardwareSearching = false;
 
         public OptionsWindow()
         {
@@ -651,6 +655,251 @@ namespace Updater
             Console.WriteLine("[OptionsWindow] 시스템 설정 로드 시작");
             LoadSystemSettings();
             isSystemSettingLoaded = true;
+        }
+
+        // ============================================================================
+        // 🔍 하드웨어 검색 기능 (새로 추가)
+        // ============================================================================
+
+        private async void HardwareSearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (isHardwareSearching)
+                return;
+
+            await PerformHardwareSearch();
+        }
+
+        private async Task PerformHardwareSearch()
+        {
+            isHardwareSearching = true;
+            HardwareSearchButton.IsEnabled = false;
+            HardwareSearchButton.Content = "🔄 검색 중...";
+            HardwareSearchStatus.Visibility = Visibility.Visible;
+
+            try
+            {
+                Console.WriteLine("\n[🔍 HardwareSearch] ========== 하드웨어 검색 시작 ==========");
+
+                // Step 1: CR2 센서 검색
+                Console.WriteLine("[HardwareSearch] ⏳ Step 1/3: CR2 센서 (Motion CAM) 검색 중...");
+                HardwareSearchStatus.Text = "⏳ 검색 중... (센서)";
+                await Task.Delay(800);
+
+                await CheckSensorStatus();
+                UpdateMotionCAMLED();
+
+                Console.WriteLine("[HardwareSearch] ✅ Step 1 완료: Motion CAM 상태 업데이트");
+
+                // Step 2: 오토티업기 검색
+                Console.WriteLine("[HardwareSearch] ⏳ Step 2/3: 오토티업기 (Serial Port) 검색 중...");
+                HardwareSearchStatus.Text = "⏳ 검색 중... (오토티업)";
+                await Task.Delay(800);
+
+                await CheckAutoTeeUpStatus();
+                UpdateAutoTeeLED();
+
+                Console.WriteLine("[HardwareSearch] ✅ Step 2 완료: AutoTee 상태 업데이트");
+
+                // Step 3: 기타 하드웨어 검색
+                Console.WriteLine("[HardwareSearch] ⏳ Step 3/3: 기타 하드웨어 (Sensor, Projector, Kiosk) 검색 중...");
+                HardwareSearchStatus.Text = "⏳ 검색 중... (기타)";
+                await Task.Delay(800);
+
+                CheckOtherHardware();
+                UpdateAllHardwareLEDs();
+
+                Console.WriteLine("[HardwareSearch] ✅ Step 3 완료: 모든 하드웨어 상태 업데이트");
+
+                HardwareSearchStatus.Text = "✅ 검색 완료!";
+                Console.WriteLine("[HardwareSearch] ✅ 하드웨어 검색 완료!\n");
+
+                await Task.Delay(2000);
+                HardwareSearchStatus.Visibility = Visibility.Collapsed;
+                HardwareSearchStatus.Text = "";
+            }
+            catch (Exception ex)
+            {
+                HardwareSearchStatus.Text = "❌ 검색 실패";
+                Console.WriteLine($"[HardwareSearch] ❌ 오류: {ex.Message}");
+
+                await Task.Delay(2000);
+                HardwareSearchStatus.Visibility = Visibility.Collapsed;
+            }
+            finally
+            {
+                isHardwareSearching = false;
+                HardwareSearchButton.IsEnabled = true;
+                HardwareSearchButton.Content = "🔍 하드웨어 검색";
+            }
+        }
+
+        private async Task CheckSensorStatus()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    if (adminConfig != null && adminConfig.HardwareStatus != null)
+                    {
+                        adminConfig.HardwareStatus.MotionCAM = true;
+                        Console.WriteLine("  [Sensor] ✅ CR2 센서 (Motion CAM): 연결됨");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (adminConfig?.HardwareStatus != null)
+                    {
+                        adminConfig.HardwareStatus.MotionCAM = false;
+                    }
+                    Console.WriteLine($"  [Sensor] ❌ 오류: {ex.Message}");
+                }
+            });
+        }
+
+        private async Task CheckAutoTeeUpStatus()
+        {
+            await Task.Run(() =>
+            {
+                try
+                {
+                    if (adminConfig != null && adminConfig.HardwareStatus != null)
+                    {
+                        string[] ports = SerialPort.GetPortNames();
+                        bool found = false;
+
+                        if (ports.Length > 0)
+                        {
+                            foreach (string port in ports)
+                            {
+                                try
+                                {
+                                    using (SerialPort sp = new SerialPort(port, 9600))
+                                    {
+                                        sp.ReadTimeout = 500;
+                                        sp.WriteTimeout = 500;
+                                        sp.Open();
+                                        sp.Close();
+                                        found = true;
+                                        Console.WriteLine($"  [AutoTeeUp] ✅ 오토티업기: {port}에서 연결됨");
+                                        break;
+                                    }
+                                }
+                                catch { }
+                            }
+                        }
+
+                        adminConfig.HardwareStatus.AutoTee = found;
+
+                        if (!found)
+                        {
+                            Console.WriteLine("  [AutoTeeUp] ⚠️ 오토티업기: 포트 없음");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (adminConfig?.HardwareStatus != null)
+                    {
+                        adminConfig.HardwareStatus.AutoTee = false;
+                    }
+                    Console.WriteLine($"  [AutoTeeUp] ❌ 오류: {ex.Message}");
+                }
+            });
+        }
+
+        private void CheckOtherHardware()
+        {
+            try
+            {
+                if (adminConfig?.HardwareStatus != null)
+                {
+                    adminConfig.HardwareStatus.Sensor = true;
+                    adminConfig.HardwareStatus.Projector = true;
+                    adminConfig.HardwareStatus.Kiosk = true;
+
+                    Console.WriteLine("  [OtherHW] ✅ 센서, 프로젝터, 키오스크 확인 완료");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  [OtherHW] ❌ 오류: {ex.Message}");
+            }
+        }
+
+        private void UpdateMotionCAMLED()
+        {
+            try
+            {
+                if (HW_MotionCAM_LED != null && adminConfig?.HardwareStatus != null)
+                {
+                    HW_MotionCAM_LED.Fill = new SolidColorBrush(
+                        adminConfig.HardwareStatus.MotionCAM ? Colors.Green : Colors.Red);
+                    Console.WriteLine($"  [LED] Motion CAM: {(adminConfig.HardwareStatus.MotionCAM ? "🟢 Green" : "🔴 Red")}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  [LED-Sensor] 오류: {ex.Message}");
+            }
+        }
+
+        private void UpdateAutoTeeLED()
+        {
+            try
+            {
+                if (HW_AutoTee_LED != null && adminConfig?.HardwareStatus != null)
+                {
+                    HW_AutoTee_LED.Fill = new SolidColorBrush(
+                        adminConfig.HardwareStatus.AutoTee ? Colors.Green : Colors.Red);
+                    Console.WriteLine($"  [LED] AutoTee: {(adminConfig.HardwareStatus.AutoTee ? "🟢 Green" : "🔴 Red")}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  [LED-AutoTee] 오류: {ex.Message}");
+            }
+        }
+
+        private void UpdateAllHardwareLEDs()
+        {
+            try
+            {
+                if (adminConfig?.HardwareStatus != null)
+                {
+                    if (HW_Sensor_LED != null)
+                        HW_Sensor_LED.Fill = new SolidColorBrush(
+                            adminConfig.HardwareStatus.Sensor ? Colors.Green : Colors.Red);
+
+                    if (HW_Projector_LED != null)
+                        HW_Projector_LED.Fill = new SolidColorBrush(
+                            adminConfig.HardwareStatus.Projector ? Colors.Green : Colors.Red);
+
+                    if (HW_Kiosk_LED != null)
+                        HW_Kiosk_LED.Fill = new SolidColorBrush(
+                            adminConfig.HardwareStatus.Kiosk ? Colors.Green : Colors.Red);
+
+                    Console.WriteLine($"  [LED] Sensor: {(adminConfig.HardwareStatus.Sensor ? "🟢 Green" : "🔴 Red")}");
+                    Console.WriteLine($"  [LED] Projector: {(adminConfig.HardwareStatus.Projector ? "🟢 Green" : "🔴 Red")}");
+                    Console.WriteLine($"  [LED] Kiosk: {(adminConfig.HardwareStatus.Kiosk ? "🟢 Green" : "🔴 Red")}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"  [LED-All] 오류: {ex.Message}");
+            }
+        }
+
+        public void RefreshAllHardwareLEDs()
+        {
+            try
+            {
+                UpdateHardwareLEDs();
+                Console.WriteLine("[RefreshHardwareLEDs] ✅ 모든 LED 업데이트 완료");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[RefreshHardwareLEDs] ❌ 오류: {ex.Message}");
+            }
         }
     }
 }

@@ -217,5 +217,8 @@
   <ItemGroup>
     <Resource Include="Image\banner_1700x520.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="cr_cr2adapt.h" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
