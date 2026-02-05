@@ -45,6 +45,23 @@ namespace Updater
 
         private IntPtr sensorHandle = IntPtr.Zero;
 
+
+        /// <summary>
+        /// 센서 핸들을 외부에서 안전하게 접근하기 위한 프로퍼티
+        /// 
+        /// 사용처:
+        /// - OptionsWindow.CheckSensorStatus()에서 센서 상태 조회
+        /// - SensorHelper.TestSensorConnection()에서 센서 연결 테스트
+        /// 
+        /// 반환값:
+        /// - IntPtr.Zero: 센서 미초기화
+        /// - 0이 아닌 값: 유효한 센서 핸들
+        /// </summary>
+        public IntPtr SensorHandle
+        {
+            get { return sensorHandle; }
+        }
+
         public MainWindow()
         {
             InitializeComponent();
@@ -83,43 +100,238 @@ namespace Updater
             }
         }
 
-        private void InitializeSensor()
+        /// <summary>
+        /// 센서 초기화 및 상태 체크 메서드 (반환값 포함)
+        /// 
+        /// 동작:
+        /// 1. XcamAdapt64.dll 파일 확인
+        /// 2. CR2_init()으로 센서 핸들 획득
+        /// 3. SensorHelper.StartSensor()로 센서 시작
+        /// 4. CR6CMD_SENSORSTATUS (8) 명령으로 센서 상태 확인
+        /// 5. CR6CMD_OPERATION_STOP (2) 명령으로 센서 중지
+        /// 
+        /// 반환값:
+        /// - true: 센서 정상 (상태값 0, 1, 2, 3, 5)
+        /// - false: 센서 미연결 (상태값 4) 또는 초기화 실패
+        /// 
+        /// 호출처:
+        /// - MainWindow 초기화 시 자동 호출
+        /// - OptionsWindow의 하드웨어 검색에서 수동 호출
+        /// </summary>
+        public bool InitializeSensor()
         {
             try
             {
+                Console.WriteLine("\n[센서 초기화] 시작 ========================================");
+
+                // ✅ Step 1: DLL 파일 확인
                 string dllPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "XcamAdapt64.dll");
                 if (!File.Exists(dllPath))
                 {
-                    Console.WriteLine($"[ERROR] XcamAdapt64.dll 없음: {dllPath}");
+                    Console.WriteLine($"[센서 초기화] ❌ XcamAdapt64.dll 없음: {dllPath}");
                     sensorHandle = IntPtr.Zero;
-                    return;
+                    Console.WriteLine("[센서 초기화] 완료 ========================================\n");
+                    return false;
                 }
 
+                Console.WriteLine($"[센서 초기화] ✅ Step 1: XcamAdapt64.dll 발견");
+
+                // ✅ Step 2: 센서 초기화
+                Console.WriteLine("[센서 초기화] Step 2: CR2_init() 호출 중...");
                 sensorHandle = CR2_init(0, 1, 0, 0, 0, 0);
 
                 if (sensorHandle == IntPtr.Zero)
                 {
-                    Console.WriteLine("[CR2_init 실패]");
-                    return;
+                    Console.WriteLine("[센서 초기화] ❌ CR2_init 실패");
+                    Console.WriteLine("[센서 초기화] 완료 ========================================\n");
+                    return false;
                 }
 
-                Console.WriteLine($"[CR2_init 성공] Handle = 0x{sensorHandle.ToInt64():X}");
+                Console.WriteLine($"[센서 초기화] ✅ Step 2: CR2_init 성공 (Handle: 0x{sensorHandle.ToInt64():X})");
 
+                // ✅ Step 3: 센서 시작
+                Console.WriteLine("[센서 초기화] Step 3: SensorHelper.StartSensor() 호출 중...");
                 if (!SensorHelper.StartSensor(sensorHandle))
                 {
-                    Console.WriteLine("[경고] 센서 시작 실패");
+                    Console.WriteLine("[센서 초기화] ⚠️ Step 3: 센서 시작 실패");
                 }
                 else
                 {
-                    Console.WriteLine("[센서 시작 성공]");
+                    Console.WriteLine("[센서 초기화] ✅ Step 3: 센서 시작 성공");
+                }
+
+                // ✅ Step 4: 센서 상태 확인 (공식 CR6CMD_SENSORSTATUS 명령어)
+                // 이 메서드는 자동으로 CR6CMD_OPERATION_STOP도 실행함
+                Console.WriteLine("[센서 초기화] Step 4: 센서 상태 확인 (CR6CMD_SENSORSTATUS)");
+                bool isConnected = CheckSensorStatusWithCommand();
+
+                Console.WriteLine("[센서 초기화] 완료 ========================================\n");
+                return isConnected;  // ✅ bool 반환
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[센서 초기화] ❌ 예외 발생: {ex.Message}");
+                Console.WriteLine($"[센서 초기화] 스택트레이스: {ex.StackTrace}");
+                sensorHandle = IntPtr.Zero;
+                Console.WriteLine("[센서 초기화] 완료 ========================================\n");
+                return false;  // ✅ bool 반환
+            }
+        }
+
+        /// <summary>
+        /// 센서 상태 확인 및 설정 (CR6CMD_SENSORSTATUS = 8 명령어 사용)
+        /// 
+        /// 동작:
+        /// 1. CR6CMD_SENSORSTATUS (8) 명령으로 센서 상태 조회
+        /// 2. AdminConfig.HardwareStatus.Sensor에 상태 적용
+        /// 3. CR6CMD_OPERATION_STOP (2) 명령으로 센서 중지
+        /// 
+        /// 반환값:
+        /// - true: 센서 정상 (상태값 0, 1, 2, 3, 5)
+        /// - false: 센서 미연결 (상태값 4) 또는 오류
+        /// 
+        /// 공식 문서 기반:
+        /// - CR2 Programming Guide v0.9.31
+        /// - p.18: CR6CMD_SENSORSTATUS = 8
+        /// - p.16: CR6CMD_OPERATION_STOP = 2
+        /// - p.5-6: 상태값 0-5 정의
+        /// </summary>
+        private bool CheckSensorStatusWithCommand()
+        {
+            if (sensorHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[센서 상태] ❌ 센서 핸들이 IntPtr.Zero");
+                return false;
+            }
+
+            bool isConnected = false;
+
+            try
+            {
+                // ✅ Step 1: SensorHelper.CheckSensorStatus() 메서드 사용
+                // - CR6CMD_SENSORSTATUS (8) 명령어 자동 실행
+                // - 상태값 0-5 반환
+                Console.WriteLine("[센서 상태] SensorHelper.CheckSensorStatus() 호출 중...");
+                bool checkResult = SensorHelper.CheckSensorStatus(sensorHandle, out uint status, out string statusText);
+
+                Console.WriteLine($"[센서 상태] CheckSensorStatus 결과: {checkResult}");
+                Console.WriteLine($"[센서 상태] 반환된 상태값: {status}");
+                Console.WriteLine($"[센서 상태] 상태텍스트: {statusText}");
+
+                if (checkResult)
+                {
+                    // ✅ Step 2: 상태값에 따른 처리
+                    Console.WriteLine("[센서 상태] Step 2: 상태값 해석 시작");
+                    switch (status)
+                    {
+                        case 0:  // CR2STATUS_NULL
+                            Console.WriteLine("[센서 상태] ⚪ 초기상태 (NULL) → true");
+                            isConnected = true;
+                            break;
+
+                        case 1:  // CR2STATUS_READY
+                            Console.WriteLine("[센서 상태] ✅ 준비됨 (READY) - 샷 가능 → true");
+                            isConnected = true;
+                            break;
+
+                        case 2:  // CR2STATUS_GOODSHOT
+                            Console.WriteLine("[센서 상태] ✅ 정상샷 (GOODSHOT) → true");
+                            isConnected = true;
+                            break;
+
+                        case 3:  // CR2STATUS_TRIALSHOT
+                            Console.WriteLine("[센서 상태] ⚠️ 비정상샷 (TRIALSHOT) - 무시 → true");
+                            isConnected = true;
+                            break;
+
+                        case 4:  // CR2STATUS_DISCONNECT
+                            Console.WriteLine("[센서 상태] ❌ 연결 끊김 (DISCONNECT) → false");
+                            Console.WriteLine("[센서 상태] 메시지: '센서와의 연결을 점검하세요'");
+                            isConnected = false;
+                            break;
+
+                        case 5:  // CR2STATUS_NOBALL
+                            Console.WriteLine("[센서 상태] ⚠️ 볼 없음 (NOBALL) → true");
+                            Console.WriteLine("[센서 상태] 메시지: '지정된 위치에 ball을 위치시키세요'");
+                            isConnected = true;
+                            break;
+
+                        default:
+                            Console.WriteLine($"[센서 상태] ❓ 알 수 없는 상태 ({status}) → false");
+                            isConnected = false;
+                            break;
+                    }
+
+                    // 상태값과 텍스트 출력
+                    Console.WriteLine($"[센서 상태] ═══════════════════════════════════════");
+                    Console.WriteLine($"[센서 상태] 명령어: CR2CMD_SENSORSTATUS (8)");
+                    Console.WriteLine($"[센서 상태] 상태값: {status}");
+                    Console.WriteLine($"[센서 상태] 상태텍스트: {statusText}");
+                    Console.WriteLine($"[센서 상태] 최종 판정: {(isConnected ? "✅ 연결됨 (true)" : "❌ 미연결 (false)")}");
+                    Console.WriteLine($"[센서 상태] ═══════════════════════════════════════");
+                }
+                else
+                {
+                    Console.WriteLine("[센서 상태] ❌ 상태 조회 실패 (CR6CMD_SENSORSTATUS 명령어 실패) → false");
+                    isConnected = false;
+                }
+
+                // ✅ Step 3: 결과를 AdminConfig에 적용
+                Console.WriteLine("[센서 상태] Step 3: AdminConfig.HardwareStatus.Sensor 업데이트");
+                // OptionsWindow에서 adminConfig 참조를 통해 적용됨
+
+                // ✅ Step 4: CR6CMD_OPERATION_STOP (2) 실행 - 센서 중지
+                Console.WriteLine("[센서 상태] Step 4: CR6CMD_OPERATION_STOP (2) 명령 실행");
+                StopSensorOperation();
+
+                Console.WriteLine($"[센서 상태] ▶️ 최종 반환값: {(isConnected ? "true (센서 연결됨)" : "false (센서 미연결)")}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[센서 상태] ❌ 상태 확인 오류: {ex.Message}");
+                Console.WriteLine($"[센서 상태] 스택트레이스: {ex.StackTrace}");
+                isConnected = false;
+            }
+
+            return isConnected;
+        }
+
+        /// <summary>
+        /// 센서 동작 중지 (CR6CMD_OPERATION_STOP = 2)
+        /// 
+        /// 공식 문서 p.16:
+        /// - CR6CMD_OPERATION_STOP = 2
+        /// - 센서 동작 멈춤
+        /// </summary>
+        private void StopSensorOperation()
+        {
+            if (sensorHandle == IntPtr.Zero)
+            {
+                Console.WriteLine("[센서 중지] ❌ 센서 핸들이 IntPtr.Zero");
+                return;
+            }
+
+            try
+            {
+                // CR6CMD_OPERATION_STOP = 2
+                bool result = SensorHelper.StopSensor(sensorHandle);
+
+                if (result)
+                {
+                    Console.WriteLine("[센서 중지] ✅ CR6CMD_OPERATION_STOP 성공");
+                }
+                else
+                {
+                    Console.WriteLine("[센서 중지] ❌ CR6CMD_OPERATION_STOP 실패");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[센서 초기화 예외] {ex.Message}");
-                sensorHandle = IntPtr.Zero;
+                Console.WriteLine($"[센서 중지] ❌ 오류: {ex.Message}");
             }
         }
+
+
 
         private async Task CheckAllStatus()
         {

@@ -686,7 +686,7 @@ namespace Updater
                 await Task.Delay(800);
 
                 await CheckSensorStatus();
-                UpdateMotionCAMLED();
+                UpdateSensorLED();
 
                 Console.WriteLine("[HardwareSearch] ✅ Step 1 완료: Motion CAM 상태 업데이트");
 
@@ -739,22 +739,66 @@ namespace Updater
             {
                 try
                 {
+                    Console.WriteLine("\n[센서 상태 체크] ========================================");
+
+                    // ✅ Step 1: MainWindow 인스턴스 확인
+                    Console.WriteLine("[센서 상태 체크] Step 1: MainWindow.InitializeSensor() 호출");
+
+                    var mainWindow = Application.Current?.MainWindow as MainWindow;
+                    if (mainWindow == null)
+                    {
+                        Console.WriteLine("[센서 상태 체크] ❌ MainWindow를 찾을 수 없습니다");
+                        if (adminConfig?.HardwareStatus != null)
+                        {
+                            adminConfig.HardwareStatus.Sensor = false;
+                        }
+                        Console.WriteLine("[센서 상태 체크] ========================================\n");
+                        return;
+                    }
+
+                    // ✅ Step 2: InitializeSensor() 호출
+                    // 이 메서드는 다음을 자동으로 수행:
+                    // - CR6CMD_SENSORSTATUS (8) 명령으로 센서 상태 조회
+                    // - CR6CMD_OPERATION_STOP (2) 명령으로 센서 중지
+                    // 반환값: true(연결됨) / false(미연결)
+                    Console.WriteLine("[센서 상태 체크] Step 2: 센서 초기화 및 상태 확인");
+                    bool isConnected = mainWindow.InitializeSensor();
+
+                    // ✅ Step 3: 반환값을 adminConfig에 직접 적용
+                    Console.WriteLine("[센서 상태 체크] Step 3: AdminConfig.HardwareStatus.Sensor 업데이트");
                     if (adminConfig != null && adminConfig.HardwareStatus != null)
                     {
-                        adminConfig.HardwareStatus.MotionCAM = true;
-                        Console.WriteLine("  [Sensor] ✅ CR2 센서 (Motion CAM): 연결됨");
+                        adminConfig.HardwareStatus.Sensor = isConnected;
+
+                        if (isConnected)
+                        {
+                            Console.WriteLine("[센서 상태 체크] ✅ CR2 센서 (Motion CAM): 연결됨");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[센서 상태 체크] ❌ CR2 센서 (Motion CAM): 연결 끊김");
+                        }
                     }
+                    else
+                    {
+                        Console.WriteLine("[센서 상태 체크] ⚠️ adminConfig 또는 HardwareStatus가 null");
+                    }
+
+                    Console.WriteLine("[센서 상태 체크] ========================================\n");
                 }
                 catch (Exception ex)
                 {
                     if (adminConfig?.HardwareStatus != null)
                     {
-                        adminConfig.HardwareStatus.MotionCAM = false;
+                        adminConfig.HardwareStatus.Sensor = false;
                     }
-                    Console.WriteLine($"  [Sensor] ❌ 오류: {ex.Message}");
+                    Console.WriteLine($"[센서 상태 체크] ❌ 예외 발생: {ex.Message}");
+                    Console.WriteLine($"[센서 상태 체크] 스택트레이스: {ex.StackTrace}");
+                    Console.WriteLine("[센서 상태 체크] ========================================\n");
                 }
             });
         }
+
 
         private async Task CheckAutoTeeUpStatus()
         {
@@ -813,7 +857,7 @@ namespace Updater
             {
                 if (adminConfig?.HardwareStatus != null)
                 {
-                    adminConfig.HardwareStatus.Sensor = true;
+                   // adminConfig.HardwareStatus.Sensor = false;
                     adminConfig.HardwareStatus.Projector = true;
                     adminConfig.HardwareStatus.Kiosk = true;
 
@@ -826,15 +870,15 @@ namespace Updater
             }
         }
 
-        private void UpdateMotionCAMLED()
+        private void UpdateSensorLED()
         {
             try
             {
-                if (HW_MotionCAM_LED != null && adminConfig?.HardwareStatus != null)
+                if (HW_Sensor_LED != null && adminConfig?.HardwareStatus != null)
                 {
-                    HW_MotionCAM_LED.Fill = new SolidColorBrush(
-                        adminConfig.HardwareStatus.MotionCAM ? Colors.Green : Colors.Red);
-                    Console.WriteLine($"  [LED] Motion CAM: {(adminConfig.HardwareStatus.MotionCAM ? "🟢 Green" : "🔴 Red")}");
+                    HW_Sensor_LED.Fill = new SolidColorBrush(
+                        adminConfig.HardwareStatus.Sensor ? Colors.Green : Colors.Red);
+                    Console.WriteLine($"  [LED] Motion CAM: {(adminConfig.HardwareStatus.Sensor ? "🟢 Green" : "🔴 Red")}");
                 }
             }
             catch (Exception ex)

@@ -36,6 +36,8 @@ namespace Updater
 
         private GameUpdateInfoList currentUpdateInfoList;  // ⭐ 추가: 배열 형태의 업데이트 정보
 
+
+
         // CR2 XCAM 센서 DLL 함수 선언
         [DllImport("XcamAdapt64.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr CR2_init(uint sensorcode, uint sensornum, long p0, long p1, long p2, long p3);
@@ -44,6 +46,13 @@ namespace Updater
         private static extern int CR2_delete(IntPtr handle);
 
         private IntPtr sensorHandle = IntPtr.Zero;
+
+        // ← 여기에 추가했는지 확인
+        public IntPtr SensorHandle
+        {
+            get { return sensorHandle; }
+        }
+
 
         public MainWindow()
         {
