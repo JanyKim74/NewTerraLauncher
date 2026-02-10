@@ -762,6 +762,7 @@
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
                                     <TextBlock Grid.Row="0" Grid.Column="0" 
@@ -827,8 +828,9 @@
                                              Margin="5,10"/>
 
                                     <!-- 🔍 하드웨어 검색 버튼 영역 (새로 추가) -->
-                                    <StackPanel Grid.Column="1" Margin="0,30,0,0" Orientation="Horizontal" HorizontalAlignment="Center" >
-                                        <Button x:Name="HardwareSearchButton"
+
+                                    <Button Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5"
+                                            x:Name="HardwareSearchButton"
                                             Content="🔍 하드웨어 검색"
                                             Click="HardwareSearchButton_Click"
                                             Width="220"
@@ -838,7 +840,8 @@
                                             Foreground="White"
                                             Background="#00CED1"
                                             BorderThickness="0"
-                                            Cursor="Hand">
+                                           Margin="0,20,0,0"
+                                            HorizontalAlignment="Center">
                                             <Button.Template>
                                                 <ControlTemplate TargetType="Button">
                                                     <Border Background="{TemplateBinding Background}" CornerRadius="12" Padding="10">
@@ -852,14 +855,16 @@
                                         </Button>
 
                                         <!-- 검색 진행 상태 표시 -->
-                                        <TextBlock x:Name="HardwareSearchStatus"
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5"
+                                               x:Name="HardwareSearchStatus"
                                                Text=""
                                                FontSize="14"
                                                Foreground="#00CED1"
                                                VerticalAlignment="Center"
                                                Visibility="Collapsed"
-                                               FontWeight="Bold"/>
-                                    </StackPanel>
+                                               FontWeight="Bold"
+                                                Margin="0,20,0,0"/>
+                            
 
                                 </Grid>
                             </Grid>
